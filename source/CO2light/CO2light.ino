@@ -9,6 +9,10 @@
  * 
  * Changelog
  * 
+ * ### Version 1.0
+ * (Eisbaeeer 20201227)
+ * - Added live graph of CO2 values on website
+ * 
  * ### Verison 0.4
  * (Eisbaeeer 20201222)   
  * - Only send MQTT if request is valid
@@ -55,10 +59,10 @@
 #include "index.h"
 #include <ESPStringTemplate.h>
 
-char version[10] = "v0.4";
+char version[10] = "v1.0";
 
 char matrixIntensity[5] = "100";
-char htmlBuffer[4096];
+char htmlBuffer[8192];
 
 const char* update_path = "/firmware";
 const char* update_username = "admin";
@@ -133,7 +137,11 @@ char mqttpass[20] = "mqtt";
 void Mqttpublish();
 //--- END MQTT -------------------------------------
 
+#define LED 2  //On board LED
+
 void setup() {
+  //Onboard LED port Direction output
+  pinMode(LED,OUTPUT); 
   Serial.begin(115200);
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -220,6 +228,11 @@ void setup() {
   display.setCursor(0,30);
   display.setTextSize(1);
   display.print(WiFi.localIP());
+  display.setCursor(0,40);
+  display.print("Version:");
+  display.setCursor(0,50);
+  display.print(version);
+   
   display.display(); 
     //--- END Wifimanager -----------------------------------------
 
@@ -231,6 +244,7 @@ void setup() {
   httpServer.on("/", handleRoot);
   httpServer.on("/reset", getReset);
   httpServer.on("/config", getConfig);
+  httpServer.on("/readValues", handleValues); //This page is called by java Script AJAX
 
   //save the custom parameters to FS
   if (shouldSaveConfig) {
@@ -405,9 +419,9 @@ void handleRoot() {
   //Serial.print("HTML Buffer:");
   //Serial.println(htmlBuffer);
   ESPStringTemplate webpage(htmlBuffer, sizeof(htmlBuffer));
-    
-  webpage.add_P(_PAGE_HEAD);
+
   webpage.add_P(_PAGE_START);
+  webpage.add_P(_PAGE_HEAD);
   
   TokenStringPair intensityPair[1]; 
   intensityPair[0].setPair("%INTENSITY%",matrixIntensity );
@@ -438,6 +452,12 @@ void handleRoot() {
   webpage.add_P(_PAGE_SOURCE, versionPair, 1);
 
   httpServer.send(200, "text/html", htmlBuffer);
+}
+
+void handleValues() {
+ String CO2Value = String(co2);
+ digitalWrite(LED,!digitalRead(LED)); //Toggle LED on data request ajax
+ httpServer.send(200, "text/plane", CO2Value); //Send CO2 value only to client ajax request
 }
 
 void redirectBack() {
