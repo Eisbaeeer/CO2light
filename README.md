@@ -35,6 +35,10 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 1.0
+(Eisbaeeer 20201228)
+- Added graph on website
+
 ### Verison 0.4
 (Eisbaeeer 20201222)   
 - Only send MQTT if request of CO2 is valid
