@@ -1,0 +1,103 @@
+[
+    {
+        "name": "projectName",
+        "label": "Project Name",
+        "type": "char",
+        "disabled": true,
+        "hidden": true,
+        "length": 32,
+        "value": "CO2light"
+    },
+    {
+        "name": "language",        
+        "type": "char",
+        "length": 3,
+        "value": "en",
+        "hidden": true
+    },
+    {
+        "name": "Time_Zone",
+        "label": "Time Zone",
+        "type": "char",
+        "length": 40,
+        "value": "PSTR(CET-1CEST,M3.5.0,M10.5.0/3)"
+    },
+    {
+        "name": "wifi_hostname",
+        "label": "WiFi Hostname",
+        "type": "char",
+        "length": 20,
+        "value": "CO2Light"
+    },
+    {
+        "name": "matrixIntensity",
+        "label": "LED brightness (0-255)",
+        "type": "char",
+        "length": 5,
+        "value": "30"
+    },
+    {
+        "name": "boarderGreen",
+        "label": "Grenze Grün",
+        "type": "uint16_t",
+        "value": 650
+    },
+    {
+        "name": "boarderYellow",
+        "label": "Grenze Gelb",
+        "type": "uint16_t",
+        "value": 850
+    },
+    {
+        "name": "boarderOrange",
+        "label": "Grenze Orange",
+        "type": "uint16_t",
+        "value": 1000
+    },
+    {
+        "name": "boarderRed",
+        "label": "Grenze Rot",
+        "type": "uint16_t",
+        "value": 1200
+    },
+    {
+        "name": "place",
+        "label": "Ort",
+        "type": "char",
+        "length": 20,
+        "value": "Messplatz"
+    },
+    {
+        "name": "mqtt_server",
+        "label": "MQTT Server IP/FQDN",
+        "type": "char",
+        "length": 20,
+        "value": "mqttserver.local"
+    },
+    {
+        "name": "mqtt_port",
+        "label": "MQTT Port",
+        "type": "int16_t",
+        "value": 1883
+    },
+    {
+        "name": "mqtt_interval",
+        "label": "MQTT Publish Interval (seconds)",
+        "type": "int8_t",
+        "value": "30"
+    },
+    {
+        "name": "mqtt_user",
+        "label": "MQTT User Name",
+        "type": "char",
+        "length": 20,
+        "value": "username"
+    },
+    {
+        "name": "mqtt_password",
+        "label": "MQTT Password",
+        "type": "char",
+        "length": 20,
+        "value": "password"
+    }
+]
