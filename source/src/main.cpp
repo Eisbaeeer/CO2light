@@ -19,10 +19,11 @@
 
 // WS2812 definitions
 #define PIN D6 // Data Pin
-#define NUMPIXELS 27 // Number of LED´s
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+#define numpixels 27
+Adafruit_NeoPixel pixels(numpixels, PIN, NEO_GRB + NEO_KHZ800);
 boolean blinking = false;
-int intensity = 30;
+int intensity = 30;     // working var for blinking etc.
+String co2Colour;
 
 // MH-Z19B definitions
 #define RX_PIN D7                                          // Pin13 D7 Rx pin which the MHZ19 Tx pin is attached to
@@ -46,16 +47,13 @@ int seconds = 0;                 // var for counting seconds
 
 //--- BEGIN MQTT ------------------------------------
 #include <PubSubClient.h>
-#define MQTT_KEEPALIVE 60;
 boolean mqttconnected = false;
-int mqttReconnect;            // timeout for reconnecting MQTT Server
 int mqttPublishTime;          // last publish time in seconds
 
 // MQTT definitions
-//void MqttCallback(char *topic, byte *payload, unsigned int length);
 WiFiClient espclient;
 PubSubClient MQTTclient(espclient);
-#define MQTT_ID "CO2light"
+#define MQTT_ID "CO2Light"
 char buf[40];
 #define MSG_BUFFER_SIZE	(20)
 char result[MSG_BUFFER_SIZE];
@@ -72,209 +70,132 @@ task taskA = { .rate = 1000, .previous = 0 };
 task taskB = { .rate = 200, .previous = 0 };
 
 // Global definitions
-#define LED 2  //On board LED
+#define BUILTIN_LED 2  //On board LED
 bool reboot = false;            // flag to reboot device
 
-
-//Define subs
-void reconnect(void);
-void PublishMQTT(void);
-void setLED(void);
-void printDisplay(void);
+// SUBROUTINES
+//*************************************************************************************
 
 void setLED(byte R, byte G, byte B) {
-  for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
+  for(int i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
     pixels.setPixelColor(i, pixels.Color(R, G, B));
-    //intensity = atoi(configManager.data.matrixIntensity);
-    //pixels.setBrightness(intensity);
     pixels.show(); 
   }
 }
 
 void saveCallback() {
-    intensity = atoi(configManager.data.matrixIntensity);
+    //intensity = atoi(configManager.data.matrixIntensity);
+    intensity = configManager.data.matrixIntensity;
+    pixels.updateLength (configManager.data.numofpixels);
     pixels.setBrightness(intensity); 
 }
 
-void setup() {
-  Serial.begin(115200);
-
-  LittleFS.begin();
-  GUI.begin();
-  configManager.begin();
-  WiFiManager.begin(configManager.data.projectName);
-  configManager.setConfigSaveCallback(saveCallback);
-  timeSync.begin();
-  dash.begin(500);
-
-  // WiFi
-  WiFi.hostname(configManager.data.wifi_hostname);
-  WiFi.begin();
-
-  //Onboard LED port Direction output
-  pinMode(LED,OUTPUT); 
-
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
+void MqttCallback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
   }
-  delay(2000);
-  display.clearDisplay();
-  display.setTextColor(WHITE);
+  Serial.println();
 
-  // Say hello to the world
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.setTextSize(3);
-  display.print("booting");
-  display.setCursor(0,30);
-  display.setTextSize(1);
-  display.print("Wifi Manager");
-  display.setCursor(0,40);
-  display.setTextSize(1);
-  display.print("Please wait!");
-  display.display(); 
-
-  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-
-  String VERSION = F("v.1.0");
-    int str_len = VERSION.length() + 1;
-    VERSION.toCharArray(dash.data.Version,str_len);
-
-    MQTTclient.setServer(configManager.data.mqtt_server, configManager.data.mqtt_port);
-    //MQTTclient.setCallback(MqttCallback);
-
-  // MH-Z19B construct
-  mySerial.begin(BAUDRATE);                               // (Uno example) device to MH-Z19 serial start   
-  myMHZ19.begin(mySerial);                                // *Serial(Stream) refence must be passed to library begin(). 
-  myMHZ19.autoCalibration();                              // Turn auto calibration ON (OFF autoCalibration(false))
+    // convert payload to intuff
+    payload[length] = '\0';
+    String s = String((char*)payload);
+    intensity = s.toInt();
+    configManager.data.matrixIntensity = intensity;
+  
+    Serial.print(F("Intensity: "));
+    Serial.println(intensity);
+    pixels.setBrightness(intensity);
 
 }
 
-void loop() {
-  // framework things
-  WiFiManager.loop();
-  updater.loop();
-  configManager.loop();
-  dash.loop();
-  MQTTclient.loop();
+// Fill the dots one after the other with a color
+void colorWipe(uint32_t c, uint8_t wait) {
+  for(uint16_t i=0; i < pixels.numPixels(); i++) {
+    pixels.setPixelColor(i, c);
+    pixels.show();
+    delay(wait);
+  }
+}
 
-//tasks
-    if (taskA.previous == 0 || (millis() - taskA.previous > taskA.rate))
+// function to crate HTML Colour
+void array_to_string(byte array[], unsigned int len, char buffer[])
+{
+    for (unsigned int i = 0; i < len; i++)
     {
-        taskA.previous = millis();
-        int rssi = 0;
-        rssi = WiFi.RSSI();
-        sprintf(dash.data.Wifi_RSSI, "%ld", rssi) ;
-        dash.data.WLAN_RSSI = WiFi.RSSI();
+        byte nib1 = (array[i] >> 4) & 0x0F;
+        byte nib2 = (array[i] >> 0) & 0x0F;
+        buffer[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
+        buffer[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
+    }
+    buffer[len*2] = '\0';
+}
 
-                 
-        reconnect();
-        mqttReconnect++;      
+void setLedColours(void) {
+  char str[32] = "";
 
-        if (mqttPublishTime <= configManager.data.mqtt_interval) {
-          mqttPublishTime++;
-        } else {
-          PublishMQTT();
-          mqttPublishTime = 0;
-
-        }
-
-        // reboot pending
-        if (reboot) {
-          reboot = false;
-          ESP.reset();
-        }
-
-        seconds++;
-
-  if (dash.data.CO2 <= configManager.data.boarderGreen ) {                              // green
-    setLED(0,255,0);
+    if (dash.data.CO2 <= configManager.data.boarderGreen ) {                              // green
+    //setLED(0,255,0);
+    colorWipe(pixels.Color(configManager.data.colorGreen[0],configManager.data.colorGreen[1],configManager.data.colorGreen[2]), 50);
     blinking = false;
-  } 
+
+    // convert to HTML colour
+    array_to_string(configManager.data.colorGreen, 3, str);
+    co2Colour = "#";
+    co2Colour += String(str);
+    Serial.println(co2Colour);
+
+    } 
   else if (( dash.data.CO2 > configManager.data.boarderGreen ) && ( dash.data.CO2 < configManager.data.boarderYellow)) {       // yellow
-    setLED(255,255,0);
+    //setLED(255,255,0);
+    colorWipe(pixels.Color(configManager.data.colorYellow[0],configManager.data.colorYellow[1],configManager.data.colorYellow[2]), 50);
     blinking = false;
+
+    // convert to HTML colour
+    array_to_string(configManager.data.colorYellow, 3, str);
+    co2Colour = "#";
+    co2Colour += String(str);
+    Serial.println(co2Colour);
+
   }
   else if (( dash.data.CO2 >= configManager.data.boarderYellow) && ( dash.data.CO2 < configManager.data.boarderOrange)) {      // orange
-    setLED(255,128,0);
+    //setLED(255,128,0);
+    colorWipe(pixels.Color(configManager.data.colorOrange[0],configManager.data.colorOrange[1],configManager.data.colorOrange[2]), 50);
     blinking = false;
+  
+    // convert to HTML colour
+    array_to_string(configManager.data.colorOrange, 3, str);
+    co2Colour = "#";
+    co2Colour += String(str);
+    Serial.println(co2Colour);
+
   }
   else if (( dash.data.CO2 >= configManager.data.boarderOrange) && ( dash.data.CO2 < configManager.data.boarderRed)) {      // orange
-    setLED(255,0,0);
+    //setLED(255,0,0);
+    colorWipe(pixels.Color(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]), 50);
     blinking = false;
+
+    // convert to HTML colour
+    array_to_string(configManager.data.colorRed, 3, str);
+    co2Colour = "#";
+    co2Colour += String(str);
+    Serial.println(co2Colour);
+
   }
   else {
-    setLED(255,0,0);                              // red
+    setLED(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]);                              // red
     blinking = true;
+
+    // convert to HTML colour
+    array_to_string(configManager.data.colorRed, 3, str);
+    co2Colour = "#";
+    co2Colour += String(str);
+    Serial.println(co2Colour);
   }
 
-    // red blinking
-      if (blinking) {
-        if (intensity > 0) {
-          intensity = 0;
-          pixels.setBrightness(intensity);
-        } else {
-          intensity = atoi(configManager.data.matrixIntensity);
-          pixels.setBrightness(intensity);
-        }
-      } else {
-          intensity = atoi(configManager.data.matrixIntensity);
-          pixels.setBrightness(intensity);
-        }
-
-       // Reboot from dashboard 
-    if (dash.data.Reboot) {
-        dash.data.Reboot = false;
-        dash.loop();
-        reboot = true;
-    }
-
-  if ( (seconds > 11) && (seconds <= 14) ) {
-    display.clearDisplay();
-    display.setCursor(0,0);
-    display.setTextSize(3);
-    display.print("IP:");
-    display.setCursor(0,30);
-    display.setTextSize(1);
-    display.print(WiFi.localIP());
-    display.display();
-  } else {
-    printDisplay();
-  }
-
-   if ( seconds == 15 ) {
-    seconds = 0;     
-  // MH-Z19B reading
-        /* note: getCO2() default is command "CO2 Unlimited". This returns the correct CO2 reading even 
-        if below background CO2 levels or above range (useful to validate sensor). You can use the 
-        usual documented command with getCO2(false) */
-        Serial.println(F("read CO2 value"));
-
-        dash.data.CO2 = myMHZ19.getCO2();                             // Request CO2 (as ppm)
-        dash.data.Temperature = myMHZ19.getTemperature();             // Request Temperature (as Celsius)
-        
-               if(myMHZ19.errorCode == RESULT_OK)              // RESULT_OK is an alis for 1. Either can be used to confirm the response was OK.
-        {
-            Serial.print(F("co2 Value successfully Recieved: "));
-            Serial.println(dash.data.CO2);
-            Serial.print(F("Response Code: "));
-            Serial.println(myMHZ19.errorCode);          // Get the Error Code value
-        }
-
-        else 
-        {
-            Serial.println(F("Failed to recieve CO2 value - Error"));
-            Serial.print(F("Response Code: "));
-            Serial.println(myMHZ19.errorCode);          // Get the Error Code value
-            dash.data.CO2 = 0;     
-        }  
- }
-
 }
-}
-
-// SUBS
 
 void printDisplay(void) {
   // clear display
@@ -306,27 +227,36 @@ void printDisplay(void) {
 
 
 void PublishMQTT(void) {                     //MQTTclient.publish
-
+  
+    // Publish CO2 value
     String topic = "CO2Light/";
            topic = topic + configManager.data.place;
            topic = topic +"/CO2";
-      dtostrf(dash.data.CO2, 5, 0, result);
-    MQTTclient.publish(topic.c_str(), result);
+           dtostrf(dash.data.CO2, 5, 0, result);
+           MQTTclient.publish(topic.c_str(), result);
 
+    // Publish Intensity       
+           topic = "CO2Light/";
+           topic = topic + configManager.data.place;
+           topic = topic +"/Brightness";
+           dtostrf(configManager.data.matrixIntensity, 5, 0, result);
+           MQTTclient.publish(topic.c_str(), result);
+          
+    // Publish CO2 Colour
+           topic = "CO2Light/";
+           topic = topic + configManager.data.place;
+           topic = topic +"/CO2Colour";
+           MQTTclient.publish( topic.c_str(), co2Colour.c_str() );    
 }
 
 void reconnect(void) {
-  if (mqttReconnect > 60) {
-
-    mqttReconnect = 0;    // reset reconnect timeout
   // reconnect to MQTT Server
   if (!MQTTclient.connected()) {
     dash.data.MQTT_Connected = false;
     Serial.println("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "CO2light-";
+    String clientId = "CO2Light-";
     clientId += String(random(0xffff), HEX);
-    //clientId += String(configManager.data.messure_place);
     // Attempt to connect
     if (MQTTclient.connect(clientId.c_str(),configManager.data.mqtt_user,configManager.data.mqtt_password)) {
       Serial.println("connected");
@@ -334,13 +264,189 @@ void reconnect(void) {
       // Once connected, publish an announcement...
       PublishMQTT();
       // ... and resubscribe
-      // MQTTclient.subscribe("inTopic");
+      String topic = "CO2Light/";
+           topic = topic + configManager.data.place;
+           topic = topic + "/Brightness";
+      MQTTclient.subscribe(topic.c_str());
+      //MQTTclient.subscribe((char*) topic.c_str());
+
     } else {
       Serial.print("failed, rc=");
       Serial.print(MQTTclient.state());
       Serial.println(" try again in one minute");
      }
     }
-   }
- 
 }
+ 
+
+void setup() {
+  Serial.begin(115200);
+
+  LittleFS.begin();
+  GUI.begin();
+  configManager.begin();
+  WiFiManager.begin(configManager.data.projectName);
+  configManager.setConfigSaveCallback(saveCallback);
+  dash.begin(500);
+
+  // WiFi
+  WiFi.hostname(configManager.data.wifi_hostname);
+  WiFi.begin();
+
+  // Timesync
+  timeSync.begin(configManager.data.Time_Zone);
+
+  //Onboard LED port Direction output
+  pinMode(BUILTIN_LED,OUTPUT); 
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  delay(2000);
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+
+  // Say hello to the world
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.setTextSize(3);
+  display.print("booting");
+  display.setCursor(0,30);
+  display.setTextSize(1);
+  display.print("Wifi Manager");
+  display.setCursor(0,40);
+  display.setTextSize(1);
+  display.print("Please wait!");
+  display.display(); 
+
+  // Neopixel SETUP
+  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+  pixels.updateLength (configManager.data.numofpixels);  // Set pixel length
+  pixels.setBrightness(intensity);
+  colorWipe(pixels.Color(0, 0, 255), 50); // Blue
+
+  String VERSION = F("v.1.3");
+    int str_len = VERSION.length() + 1;
+    VERSION.toCharArray(dash.data.Version,str_len);
+
+  // MQTT
+  MQTTclient.setServer(configManager.data.mqtt_server, configManager.data.mqtt_port);
+  MQTTclient.setCallback(MqttCallback);
+
+  // MH-Z19B construct
+  mySerial.begin(BAUDRATE);                               // (Uno example) device to MH-Z19 serial start   
+  myMHZ19.begin(mySerial);                                // *Serial(Stream) refence must be passed to library begin(). 
+  myMHZ19.autoCalibration();                              // Turn auto calibration ON (OFF autoCalibration(false))
+
+}
+
+void loop() {
+  // framework things
+  WiFiManager.loop();
+  updater.loop();
+  configManager.loop();
+  dash.loop();
+  MQTTclient.loop();
+  //Serial.print(F("loop running..."));
+
+//tasks
+    if (taskA.previous == 0 || (millis() - taskA.previous > taskA.rate))
+    {
+        taskA.previous = millis();
+        int rssi = 0;
+        rssi = WiFi.RSSI();
+        sprintf(dash.data.Wifi_RSSI, "%ld", rssi) ;
+        dash.data.WLAN_RSSI = WiFi.RSSI();
+
+      // MQTT Stuff
+      if (configManager.data.mqttEnable) {              
+        reconnect();
+      
+        if (mqttPublishTime <= configManager.data.mqtt_interval) {
+          mqttPublishTime++;
+        } else {
+          PublishMQTT();
+          mqttPublishTime = 0;
+        }
+      }
+
+        // reboot pending
+        if (reboot) {
+          reboot = false;
+          ESP.reset();
+        }
+
+        seconds++;
+
+       // Reboot from dashboard 
+    if (dash.data.Reboot) {
+        dash.data.Reboot = false;
+        dash.loop();
+        reboot = true;
+    }
+
+  if ( (seconds > 11) && (seconds <= 14) ) {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(3);
+    display.print("IP:");
+    display.setCursor(0,30);
+    display.setTextSize(1);
+    display.print(WiFi.localIP());
+    display.display();
+  } else {
+    printDisplay();
+  }
+
+      // red blinking
+      if (blinking) {
+        if (intensity > 0) {
+          intensity = 0;
+          pixels.setBrightness(intensity);
+        } else {
+          //intensity = atoi(configManager.data.matrixIntensity);
+          intensity = configManager.data.matrixIntensity;
+          pixels.setBrightness(intensity);
+        }
+      } else {
+          //intensity = atoi(configManager.data.matrixIntensity);
+          intensity = configManager.data.matrixIntensity;
+          pixels.setBrightness(intensity);
+        }
+
+
+   if ( seconds == 15 ) {
+    seconds = 0;     
+  // MH-Z19B reading
+        // note: getCO2() default is command "CO2 Unlimited". This returns the correct CO2 reading even 
+        // if below background CO2 levels or above range (useful to validate sensor). You can use the 
+        // usual documented command with getCO2(false) 
+        Serial.println(F("read CO2 value"));
+  
+        dash.data.CO2 = myMHZ19.getCO2();                             // Request CO2 (as ppm)
+        dash.data.Temperature = myMHZ19.getTemperature();             // Request Temperature (as Celsius)
+        
+               if(myMHZ19.errorCode == RESULT_OK)              // RESULT_OK is an alis for 1. Either can be used to confirm the response was OK.
+        {
+            Serial.print(F("co2 Value successfully Recieved: "));
+            Serial.println(dash.data.CO2);
+            Serial.print(F("Response Code: "));
+            Serial.println(myMHZ19.errorCode);          // Get the Error Code value
+        }
+
+        else 
+        {
+            Serial.println(F("Failed to recieve CO2 value - Error"));
+            Serial.print(F("Response Code: "));
+            Serial.println(myMHZ19.errorCode);          // Get the Error Code value
+            dash.data.CO2 = 0;     
+        }  
+        // Change the colours regarding the CO2 value
+        setLedColours();
+    }
+  
+  }
+
+}
+

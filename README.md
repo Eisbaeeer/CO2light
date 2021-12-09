@@ -11,11 +11,19 @@ will give you more informations about the web page and the messured values. You 
 - all settings are stored on the filesystem in a JSON format
 - Wifi-Manager for easy connection to available AccessPoints
 - MQTT client to transmit the values to a central server like home-automation-systems
+- Brightness configurable via MQTT subscription (e.g. for automated day/night mode)
+- Publishing the colour of CO2 value via MQTT in HTML code (e.g. to display in homeautiomation)
+- Publishing the CO2 value via MQTT
 - Webpage to configure all settings or read the values
 - OTA Over-The-Air update of firmware
+- Colour picker for all colour states
+- Colour ranges configurable 
 
 ![Logo](pics/red.jpg)
 ![Logo](pics/sensor.jpg)
+![Logo](pics/Config.jpg)
+![Logo](pics/dashboard.jpg)
+![Logo](pics/iobroker-mqtt.jpg)
 
 ## Steps to get running
 1. Install VS-Code
@@ -28,7 +36,18 @@ will give you more informations about the web page and the messured values. You 
 - http://www.kidbuild.de or https://shop.kidbuild.de
 E-Mail info@kidbuild.de
 
+## ToDo
+- Adding piezo for audio alarm
+
 ## Changelog 
+
+### Version 1.3
+(Eisbaeeer 20211209)
+- Added colour picker for each colour
+- Added MQTT enable / disable button
+- Brightness adjustable via MQTT subscription "Brightness"
+- Publishing LED colour as HTML 
+- LED pixels count configurable
 
 ### Version 1.0
 (Eisbaeeer 20211126)

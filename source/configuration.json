@@ -30,9 +30,16 @@
         "value": "CO2Light"
     },
     {
+        "name": "numofpixels",
+        "label": "Number of RGB Pixels",
+        "type": "int16_t",
+        "length": 5,
+        "value": "27"
+    },
+    {
         "name": "matrixIntensity",
         "label": "LED brightness (0-255)",
-        "type": "char",
+        "type": "uint16_t",
         "length": 5,
         "value": "30"
     },
@@ -61,11 +68,41 @@
         "value": 1200
     },
     {
+        "name": "colorGreen",
+        "label": "Farbton Grün",
+        "type": "color",
+        "value": [0,255,0]
+    },
+    {
+        "name": "colorYellow",
+        "label": "Farbton Gelb",
+        "type": "color",
+        "value": [220,255,0]
+    },
+    {
+        "name": "colorOrange",
+        "label": "Farbton Orange",
+        "type": "color",
+        "value": [255,170,0]
+    },
+    {
+        "name": "colorRed",
+        "label": "Farbton Rot",
+        "type": "color",
+        "value": [255,0,0]
+    },
+    {
+        "name": "mqttEnable",
+        "label": "Enable MQTT",
+        "type": "bool",
+        "value": false
+    },
+    {
         "name": "place",
         "label": "Ort",
         "type": "char",
         "length": 20,
-        "value": "Messplatz"
+        "value": "Wohnzimmer"
     },
     {
         "name": "mqtt_server",
