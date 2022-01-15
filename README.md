@@ -17,7 +17,8 @@ will give you more informations about the web page and the messured values. You 
 - Webpage to configure all settings or read the values
 - OTA Over-The-Air update of firmware
 - Colour picker for all colour states
-- Colour ranges configurable 
+- Colour ranges configurable
+- Manual calibration of CO2 value possible via dashboard
 
 ![Logo](pics/red.jpg)
 ![Logo](pics/sensor.jpg)
@@ -41,7 +42,15 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
-### Version 1.3
+### Version 2.0   
+- Added manual calibration via dashboard (takes 20 minutes in fresh air)
+- Changed structure of code
+- Moved default boarders of CO2 colors
+- Updated framework
+- Changed brightness to slider
+
+
+### Version 1.3   
 (Eisbaeeer 20211209)
 - Added colour picker for each colour
 - Added MQTT enable / disable button

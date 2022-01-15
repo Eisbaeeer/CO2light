@@ -11,7 +11,6 @@
 #include <TZ.h>
 #include <ArduinoJson.h>
 #include <SPI.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h>
 #include "MHZ19.h"                                        
@@ -43,7 +42,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 unsigned long previousMillis = 0;
 const long interval = 100;   // 
 byte periode = 0;
-int seconds = 0;                 // var for counting seconds
 
 //--- BEGIN MQTT ------------------------------------
 #include <PubSubClient.h>
@@ -66,12 +64,17 @@ struct task
     unsigned long previous;
 };
 
-task taskA = { .rate = 1000, .previous = 0 };
-task taskB = { .rate = 200, .previous = 0 };
+task taskA = { .rate = 1000, .previous = 0 };     // 1 second
+task taskB = { .rate = 60000, .previous = 0 };     // 1 minute
 
 // Global definitions
 #define BUILTIN_LED 2  //On board LED
 bool reboot = false;            // flag to reboot device
+int seconds = 0; 
+bool isCaptive = false; 	      // Captive portal active
+unsigned long timeElapse = 0;
+bool calibrationStarted = false;  
+int prevseconds;
 
 // SUBROUTINES
 //*************************************************************************************
@@ -114,7 +117,18 @@ void MqttCallback(char* topic, byte* payload, unsigned int length) {
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i < pixels.numPixels(); i++) {
+    pixels.setBrightness(intensity);
     pixels.setPixelColor(i, c);
+    pixels.show();
+    delay(wait);
+  }
+}
+
+// Fill the dots one after the other with a color
+void colorWipeReverse(uint32_t c, uint8_t wait) {
+  for(uint16_t i=pixels.numPixels(); i > 0 ; i--) {
+    pixels.setBrightness(intensity);
+    pixels.setPixelColor(i, 0);
     pixels.show();
     delay(wait);
   }
@@ -145,7 +159,7 @@ void setLedColours(void) {
     array_to_string(configManager.data.colorGreen, 3, str);
     co2Colour = "#";
     co2Colour += String(str);
-    Serial.println(co2Colour);
+    //Serial.println(co2Colour);
 
     } 
   else if (( dash.data.CO2 > configManager.data.boarderGreen ) && ( dash.data.CO2 < configManager.data.boarderYellow)) {       // yellow
@@ -157,7 +171,7 @@ void setLedColours(void) {
     array_to_string(configManager.data.colorYellow, 3, str);
     co2Colour = "#";
     co2Colour += String(str);
-    Serial.println(co2Colour);
+    //Serial.println(co2Colour);
 
   }
   else if (( dash.data.CO2 >= configManager.data.boarderYellow) && ( dash.data.CO2 < configManager.data.boarderOrange)) {      // orange
@@ -169,7 +183,7 @@ void setLedColours(void) {
     array_to_string(configManager.data.colorOrange, 3, str);
     co2Colour = "#";
     co2Colour += String(str);
-    Serial.println(co2Colour);
+    //Serial.println(co2Colour);
 
   }
   else if (( dash.data.CO2 >= configManager.data.boarderOrange) && ( dash.data.CO2 < configManager.data.boarderRed)) {      // orange
@@ -181,7 +195,7 @@ void setLedColours(void) {
     array_to_string(configManager.data.colorRed, 3, str);
     co2Colour = "#";
     co2Colour += String(str);
-    Serial.println(co2Colour);
+    //Serial.println(co2Colour);
 
   }
   else {
@@ -192,7 +206,7 @@ void setLedColours(void) {
     array_to_string(configManager.data.colorRed, 3, str);
     co2Colour = "#";
     co2Colour += String(str);
-    Serial.println(co2Colour);
+    //Serial.println(co2Colour);
   }
 
 }
@@ -204,10 +218,9 @@ void printDisplay(void) {
   display.setCursor(0,0);
   display.setTextSize(4);
   display.print(dash.data.Temperature,1);
-  display.print(" ");
   display.setTextSize(3);
   display.cp437(true);
-  display.write(167);
+  display.write(521);
   display.setTextSize(4);
   display.print("C");
   // display co2
@@ -277,6 +290,68 @@ void reconnect(void) {
      }
     }
 }
+
+void verifyRange(int range);    // Need for calibration
+
+void calibrationActive() {      // Calibration in progress
+    if (dash.data.Calibration) {
+      dash.data.Calibration = false;
+      seconds = 0;
+      calibrationStarted = true;          // starting calibration mode
+      Serial.print(F("[DEBUG] calibrationStarted "));
+      Serial.println(calibrationStarted);
+      myMHZ19.autoCalibration(false);     // make sure auto calibration is off
+      Serial.print("ABC Status: "); myMHZ19.getABC() ? Serial.println("ON") :  Serial.println("OFF");  // now print it's status
+      Serial.println("Waiting 20 minutes to stabalise...");
+      // Info on display
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.setTextSize(2);
+      display.print("Calibrate");
+      display.setCursor(0,24);
+      display.setTextSize(2);
+      display.print("Started");
+      display.setCursor(0,48);
+      display.setTextSize(1);
+      display.print("Please wait!");
+      display.display();
+      delay(4000);
+    }
+    if (seconds < 1200) {       // 20 minutes = 1200 seconds
+      if (seconds > prevseconds) {
+        prevseconds = seconds;
+        pixels.clear(); // Set all pixel colors to 'off'
+        colorWipe(pixels.Color(0, 0, 255), 10); // Blue
+        colorWipeReverse(pixels.Color(0, 0, 255), 10); // Blue
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.setTextSize(2);
+        display.print("Calibrate");
+        display.setCursor(0,30);
+        display.setTextSize(2);
+        int remaining = 1200 - seconds;
+        display.print(remaining);
+        display.setCursor(0,48);
+        display.setTextSize(1);
+        display.print("seconds ramaining");
+        display.display();
+        Serial.print(F("[DEBUG] Calibration"));
+        Serial.print(remaining);
+        Serial.println(F(" seconds remaining"));
+    } 
+  } else {
+        myMHZ19.calibrate();    // Take a reading which be used as the zero point for 400 ppm
+        myMHZ19.autoCalibration(true);     // make sure auto calibration is on
+        calibrationStarted = false;
+        seconds = 0;
+        colorWipe(pixels.Color(0, 255, 0), 50); // Blue
+        colorWipeReverse(pixels.Color(0, 255, 0), 50); // Blue
+        colorWipe(pixels.Color(0, 255, 0), 50); // Blue
+        colorWipeReverse(pixels.Color(0, 255, 0), 50); // Blue
+        colorWipe(pixels.Color(0, 255, 0), 50); // Blue
+        colorWipeReverse(pixels.Color(0, 255, 0), 50); // Blue
+    }
+}
  
 
 void setup() {
@@ -326,7 +401,7 @@ void setup() {
   pixels.setBrightness(intensity);
   colorWipe(pixels.Color(0, 0, 255), 50); // Blue
 
-  String VERSION = F("v.1.3");
+  String VERSION = F("v.2.0");
     int str_len = VERSION.length() + 1;
     VERSION.toCharArray(dash.data.Version,str_len);
 
@@ -337,69 +412,44 @@ void setup() {
   // MH-Z19B construct
   mySerial.begin(BAUDRATE);                               // (Uno example) device to MH-Z19 serial start   
   myMHZ19.begin(mySerial);                                // *Serial(Stream) refence must be passed to library begin(). 
-  myMHZ19.autoCalibration();                              // Turn auto calibration ON (OFF autoCalibration(false))
+  myMHZ19.autoCalibration(true);                              // Turn auto calibration ON (OFF autoCalibration(false))
 
 }
 
+int startnum = 1;
+
 void loop() {
-  // framework things
+
+ // framework things
   WiFiManager.loop();
   updater.loop();
   configManager.loop();
   dash.loop();
-  MQTTclient.loop();
   //Serial.print(F("loop running..."));
 
 //tasks
-    if (taskA.previous == 0 || (millis() - taskA.previous > taskA.rate))
-    {
+    if (taskA.previous == 0 || (millis() - taskA.previous > taskA.rate)) {
         taskA.previous = millis();
+
+      seconds++;
+      Serial.print(F("[INFO] seconds "));
+      Serial.println(seconds);
+
+      Serial.print(F("[DEBUG] calibrationStarted = "));
+      Serial.println(calibrationStarted);
+
+      // Check if reboot flag is set
+      isCaptive = WiFiManager.isCaptivePortal();
+
         int rssi = 0;
         rssi = WiFi.RSSI();
         sprintf(dash.data.Wifi_RSSI, "%ld", rssi) ;
         dash.data.WLAN_RSSI = WiFi.RSSI();
 
-      // MQTT Stuff
-      if (configManager.data.mqttEnable) {              
-        reconnect();
       
-        if (mqttPublishTime <= configManager.data.mqtt_interval) {
-          mqttPublishTime++;
-        } else {
-          PublishMQTT();
-          mqttPublishTime = 0;
-        }
-      }
-
-        // reboot pending
-        if (reboot) {
-          reboot = false;
-          ESP.reset();
-        }
-
-        seconds++;
-
-       // Reboot from dashboard 
-    if (dash.data.Reboot) {
-        dash.data.Reboot = false;
-        dash.loop();
-        reboot = true;
-    }
-
-  if ( (seconds > 11) && (seconds <= 14) ) {
-    display.clearDisplay();
-    display.setCursor(0,0);
-    display.setTextSize(3);
-    display.print("IP:");
-    display.setCursor(0,30);
-    display.setTextSize(1);
-    display.print(WiFi.localIP());
-    display.display();
-  } else {
-    printDisplay();
-  }
-
-      // red blinking
+      if (calibrationStarted == false) {
+      
+        // red blinking
       if (blinking) {
         if (intensity > 0) {
           intensity = 0;
@@ -414,7 +464,76 @@ void loop() {
           intensity = configManager.data.matrixIntensity;
           pixels.setBrightness(intensity);
         }
+      
+        if (mqttPublishTime <= configManager.data.mqtt_interval) {
+          mqttPublishTime++;
+        } else {
+          PublishMQTT();
+          mqttPublishTime = 0;
+        }
+      } else {
+    calibrationActive();
+    } 
+  }
 
+    if (taskB.previous == 0 || (millis() - taskB.previous > taskB.rate)) {
+        taskB.previous = millis();
+      
+      // MQTT Stuff
+      if (configManager.data.mqttEnable) {              
+        MQTTclient.loop();
+        reconnect();
+      }
+    }
+
+        // reboot pending
+        if (reboot) {
+          reboot = false;
+          ESP.reset();
+        }
+
+       // Reboot from dashboard 
+    if (dash.data.Reboot) {
+        dash.data.Reboot = false;
+        dash.loop();
+        reboot = true;
+    }
+
+  // Display
+  // only if Calibraion is not running
+  if (calibrationStarted == false) {
+    if ( (seconds > 11) && (seconds <= 14) ) {
+      display.clearDisplay();
+      if (isCaptive) {
+        display.setCursor(0,0);
+        display.setTextSize(2);
+        display.print("Captive");
+        display.setCursor(0,16);
+        display.print("Portal");
+        display.setCursor(0,40);
+        display.setTextSize(1);
+        display.print("IP Adresse");
+        display.setCursor(0,56);
+        display.setTextSize(1);
+        display.print("192.168.4.1");
+        display.display();
+      } else {
+        display.setCursor(0,0);
+        display.setTextSize(2);
+        display.print("Client");
+        display.setCursor(0,16);
+        display.print("Mode");
+        display.setCursor(0,40);
+        display.setTextSize(1);
+        display.print("IP Adresse");
+        display.setCursor(0,56);
+        display.setTextSize(1);
+        display.print(WiFi.localIP());
+        display.display();
+      } 
+    } else {
+      printDisplay(); 
+    }
 
    if ( seconds == 15 ) {
     seconds = 0;     
@@ -433,6 +552,8 @@ void loop() {
             Serial.println(dash.data.CO2);
             Serial.print(F("Response Code: "));
             Serial.println(myMHZ19.errorCode);          // Get the Error Code value
+
+            
         }
 
         else 
@@ -442,11 +563,16 @@ void loop() {
             Serial.println(myMHZ19.errorCode);          // Get the Error Code value
             dash.data.CO2 = 0;     
         }  
-        // Change the colours regarding the CO2 value
-        setLedColours();
     }
-  
+          if((myMHZ19.errorCode == RESULT_OK) && (dash.data.CO2 != 0)) {
+            // Change the colours regarding the CO2 value
+            setLedColours();
+          }      
+
   }
 
+  if (dash.data.Calibration) {
+    calibrationActive();
+  }
 }
 

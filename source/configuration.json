@@ -38,34 +38,36 @@
     },
     {
         "name": "matrixIntensity",
-        "label": "LED brightness (0-255)",
+        "label": "LED brightness",
         "type": "uint16_t",
-        "length": 5,
-        "value": "30"
+        "value": "30",
+        "control": "slider",
+        "min": 0,
+        "max": 255
     },
     {
         "name": "boarderGreen",
         "label": "Grenze Grün",
         "type": "uint16_t",
-        "value": 650
+        "value": 700
     },
     {
         "name": "boarderYellow",
         "label": "Grenze Gelb",
         "type": "uint16_t",
-        "value": 850
+        "value": 1000
     },
     {
         "name": "boarderOrange",
         "label": "Grenze Orange",
         "type": "uint16_t",
-        "value": 1000
+        "value": 1200
     },
     {
         "name": "boarderRed",
         "label": "Grenze Rot",
         "type": "uint16_t",
-        "value": 1200
+        "value": 1400
     },
     {
         "name": "colorGreen",
@@ -93,7 +95,7 @@
     },
     {
         "name": "mqttEnable",
-        "label": "Enable MQTT",
+        "label": "MQTT Enable",
         "type": "bool",
         "value": false
     },
@@ -108,7 +110,7 @@
         "name": "mqtt_server",
         "label": "MQTT Server IP/FQDN",
         "type": "char",
-        "length": 20,
+        "length": 200,
         "value": "mqttserver.local"
     },
     {

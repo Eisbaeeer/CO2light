@@ -41,5 +41,12 @@
         "type": "bool",
         "direction": "control",
         "hidden": false
+    },
+    {
+        "name": "Calibration",
+        "type": "bool",
+        "direction": "control",
+        "hidden": false,
+        "value": false
     }
 ]
