@@ -43,7 +43,7 @@ E-Mail info@kidbuild.de
 ## Changelog 
 
 ### Version 2.0   
-- Added manual calibration via dashboard (takes 20 minutes in fresh air)
+- Added manual calibration via dashboard (takes 20 minutes on fresh air)
 - Changed structure of code
 - Moved default boarders of CO2 colors
 - Updated framework
