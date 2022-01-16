@@ -59,6 +59,9 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 2.1
+- Bugfix MQTT client.loop
+
 ### Version 2.0   
 - Added manual calibration via dashboard (takes 20 minutes on fresh air)
 - Changed structure of code

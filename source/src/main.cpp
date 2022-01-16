@@ -401,7 +401,7 @@ void setup() {
   pixels.setBrightness(intensity);
   colorWipe(pixels.Color(0, 0, 255), 50); // Blue
 
-  String VERSION = F("v.2.0");
+  String VERSION = F("v.2.1");
     int str_len = VERSION.length() + 1;
     VERSION.toCharArray(dash.data.Version,str_len);
 
@@ -421,11 +421,14 @@ int startnum = 1;
 void loop() {
 
  // framework things
+  yield();
   WiFiManager.loop();
   updater.loop();
   configManager.loop();
   dash.loop();
-  //Serial.print(F("loop running..."));
+  if (configManager.data.mqttEnable) {              
+        MQTTclient.loop();
+      }
 
 //tasks
     if (taskA.previous == 0 || (millis() - taskA.previous > taskA.rate)) {
@@ -445,7 +448,12 @@ void loop() {
         rssi = WiFi.RSSI();
         sprintf(dash.data.Wifi_RSSI, "%ld", rssi) ;
         dash.data.WLAN_RSSI = WiFi.RSSI();
-
+      
+      // set colors of LED
+      if((myMHZ19.errorCode == RESULT_OK) && (dash.data.CO2 != 0)) {
+            // Change the colours regarding the CO2 value
+            setLedColours();
+          } 
       
       if (calibrationStarted == false) {
       
@@ -554,20 +562,13 @@ void loop() {
             Serial.println(myMHZ19.errorCode);          // Get the Error Code value
 
             
-        }
-
-        else 
-        {
+        } else {
             Serial.println(F("Failed to recieve CO2 value - Error"));
             Serial.print(F("Response Code: "));
             Serial.println(myMHZ19.errorCode);          // Get the Error Code value
             dash.data.CO2 = 0;     
         }  
-    }
-          if((myMHZ19.errorCode == RESULT_OK) && (dash.data.CO2 != 0)) {
-            // Change the colours regarding the CO2 value
-            setLedColours();
-          }      
+    }     
 
   }
 
