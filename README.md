@@ -20,6 +20,23 @@ will give you more informations about the web page and the messured values. You 
 - Colour ranges configurable
 - Manual calibration of CO2 value possible via dashboard
 
+## Schematic
+
+| NodeMCU Board Pins  | Device Pin         | Device Name  |   
+|---------------------|--------------------|--------------|   
+| GND                 | GND                | SSD1309 OLED |   
+| 3.3V                | Vin                | SSD1309 OLED |   
+| D1                  | SCL                | SSD1309 OLED |   
+| D2                  | SDA                | SSD1309 OLED |   
+| D6                  | Data in            | WS2812B LED  |   
+| Vin or 5V           | +5V                | WS2812B LED  |
+| GND                 | GND                | WS2812B LED  |
+| D7                  | Pin6 UART TXT (gn) | MH-Z19 CO2   |
+| D8                  | Pin5 UART RXT (bl) | MH-Z19 CO2   |
+| GND                 | Pin3 GND (sw)      | MH-Z19 CO2   |
+| Vin or 5V           | Pin4 +5V (rt)      | MH-Z19 CO2   |
+
+
 ![Logo](pics/red.jpg)
 ![Logo](pics/sensor.jpg)
 ![Logo](pics/Config.jpg)
