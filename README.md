@@ -26,13 +26,13 @@ will give you more informations about the web page and the messured values. You 
 |---------------------|--------------------|--------------|   
 | GND                 | GND                | SSD1309 OLED |   
 | 3.3V                | Vin                | SSD1309 OLED |   
-| D1                  | SCL                | SSD1309 OLED |   
-| D2                  | SDA                | SSD1309 OLED |   
-| D6                  | Data in            | WS2812B LED  |   
+| GPIO5               | SCL                | SSD1309 OLED |   
+| GPIO4               | SDA                | SSD1309 OLED |   
+| GPIO3               | Data in            | WS2812B LED  |   
 | Vin or 5V           | +5V                | WS2812B LED  |
 | GND                 | GND                | WS2812B LED  |
-| D7                  | Pin6 UART TXT (gn) | MH-Z19 CO2   |
-| D8                  | Pin5 UART RXT (bl) | MH-Z19 CO2   |
+| GPIO13              | Pin6 UART TXT (gn) | MH-Z19 CO2   |
+| GPIO15              | Pin5 UART RXT (bl) | MH-Z19 CO2   |
 | GND                 | Pin3 GND (sw)      | MH-Z19 CO2   |
 | Vin or 5V           | Pin4 +5V (rt)      | MH-Z19 CO2   |
 
@@ -58,6 +58,10 @@ E-Mail info@kidbuild.de
 - Adding piezo for audio alarm
 
 ## Changelog 
+
+### Version 2.2
+- Bugfixes
+- Changed Adafruit Neopixel lib to NeoPixelBus regarding disabled interrupts. This will break Wifi (You have to change the Din Pin to GPIO3)
 
 ### Version 2.1
 - Bugfix MQTT client.loop

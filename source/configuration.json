@@ -9,6 +9,15 @@
         "value": "CO2light"
     },
     {
+        "name": "projectVersion",
+        "label": "Project Version",
+        "type": "char",
+        "disabled": true,
+        "hidden": true,
+        "length": 8,
+        "value": "2.2"
+    },
+    {
         "name": "language",        
         "type": "char",
         "length": 3,
@@ -20,7 +29,20 @@
         "label": "Time Zone",
         "type": "char",
         "length": 40,
-        "value": "PSTR(CET-1CEST,M3.5.0,M10.5.0/3)"
+        "value": "PSTR(CET-1CEST,M3.5.0,M10.5.0/3)",
+        "control": "select",
+        "options": [
+            "PSTR(CET-1CEST,M3.5.0,M10.5.0/3)",
+            "PSTR(EET-2EEST,M3.5.0/3,M10.5.0/4)",
+            "PSTR(IST-1GMT0,M10.5.0,M3.5.0/1)",
+            "PSTR(EET-2EEST,M3.5.0/3,M10.5.0/4)"
+        ],
+        "optionLabels": [
+            "Europe - Berlin / Amsterdam / Andorra",
+            "Europe - Athens",
+            "Europe - Dublin",
+            "Europe - Bukarest/Helsinki"
+        ]
     },
     {
         "name": "wifi_hostname",
@@ -39,7 +61,7 @@
     {
         "name": "matrixIntensity",
         "label": "LED brightness",
-        "type": "uint16_t",
+        "type": "uint8_t",
         "value": "30",
         "control": "slider",
         "min": 0,

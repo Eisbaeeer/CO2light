@@ -1,11 +1,5 @@
 [
     {
-        "name": "Version",
-        "type": "char",
-        "length": 6,
-        "direction": "display"
-    },
-    {
         "name": "Wifi_RSSI",
         "type": "char",
         "length": 6,

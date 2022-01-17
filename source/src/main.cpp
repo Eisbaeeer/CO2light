@@ -12,14 +12,40 @@
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include <Adafruit_SSD1306.h>
-#include <Adafruit_NeoPixel.h>
 #include "MHZ19.h"                                        
 #include <SoftwareSerial.h>
+#include <NeoPixelBrightnessBus.h> // instead of NeoPixelBus.h
+#include <NeoPixelAnimator.h>
 
 // WS2812 definitions
-#define PIN D6 // Data Pin
-#define numpixels 27
-Adafruit_NeoPixel pixels(numpixels, PIN, NEO_GRB + NEO_KHZ800);
+  const uint16_t PixelCount = 40; // this example assumes 4 pixels, making it smaller will cause a failure
+  const uint8_t PixelPin = 3;  // make sure to set this to the correct pin, ignored for Esp8266
+  //const RgbColor CylonEyeColor(HtmlColor(0x7f0000));
+  const RgbColor CylonEyeColor(0,0,255);
+#define colorSaturation 255 // saturation of color constants
+RgbColor blue(0, 0, colorSaturation);
+
+NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+//NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>* strip = NULL;
+NeoPixelAnimator animations(2); // only ever need 2 animations
+
+uint16_t lastPixel = 0; // track the eye position
+int8_t moveDir = 1; // track the direction of movement
+
+// uncomment one of the lines below to see the effects of
+// changing the ease function on the movement animation
+AnimEaseFunction moveEase =
+//      NeoEase::Linear;
+//      NeoEase::QuadraticInOut;
+//      NeoEase::CubicInOut;
+        NeoEase::QuarticInOut;
+//      NeoEase::QuinticInOut;
+//      NeoEase::SinusoidalInOut;
+//      NeoEase::ExponentialInOut;
+//      NeoEase::CircularInOut;
+
+// NeoPixelBus TEST ENDE
+
 boolean blinking = false;
 int intensity = 30;     // working var for blinking etc.
 String co2Colour;
@@ -79,18 +105,104 @@ int prevseconds;
 // SUBROUTINES
 //*************************************************************************************
 
-void setLED(byte R, byte G, byte B) {
-  for(int i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
-    pixels.setPixelColor(i, pixels.Color(R, G, B));
-    pixels.show(); 
+// NEOPIXELBUS ANIMATION BEGIN
+
+void FadeAll(uint8_t darkenBy)
+{
+    RgbColor color;
+    for (uint16_t indexPixel = 0; indexPixel < configManager.data.numofpixels; indexPixel++)
+    {
+        color = strip.GetPixelColor(indexPixel);
+        color.Darken(darkenBy);
+        strip.SetPixelColor(indexPixel, color);
+    }
+}
+
+void FadeAnimUpdate(const AnimationParam& param)
+{
+    if (param.state == AnimationState_Completed)
+    {
+        FadeAll(10);
+        animations.RestartAnimation(param.index);
+    }
+}
+
+void MoveAnimUpdate(const AnimationParam& param)
+{
+    // apply the movement animation curve
+    float progress = moveEase(param.progress);
+
+    // use the curved progress to calculate the pixel to effect
+    uint16_t nextPixel;
+    if (moveDir > 0)
+    {
+        nextPixel = progress * configManager.data.numofpixels;
+    }
+    else
+    {
+        nextPixel = (1.0f - progress) * configManager.data.numofpixels;
+    }
+
+    // if progress moves fast enough, we may move more than
+    // one pixel, so we update all between the calculated and
+    // the last
+    if (lastPixel != nextPixel)
+    {
+        for (uint16_t i = lastPixel + moveDir; i != nextPixel; i += moveDir)
+        {
+            strip.SetPixelColor(i, CylonEyeColor);
+        }
+    }
+    strip.SetPixelColor(nextPixel, CylonEyeColor);
+
+    lastPixel = nextPixel;
+
+    if (param.state == AnimationState_Completed)
+    {
+        // reverse direction of movement
+        moveDir *= -1;
+
+        // done, time to restart this position tracking animation/timer
+        animations.RestartAnimation(param.index);
+    }
+}
+
+void SetupAnimations()
+{
+    // fade all pixels providing a tail that is longer the faster
+    // the pixel moves.
+    animations.StartAnimation(0, 5, FadeAnimUpdate);
+
+    // take several seconds to move eye fron one side to the other
+    animations.StartAnimation(1, 2000, MoveAnimUpdate);
+}
+
+// NEOPIXELBUS END
+
+void setLED(uint8_t R, uint8_t G, uint8_t B) {
+  RgbColor RGB(R,G,B);
+  for(uint8_t i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
+    strip.SetPixelColor(i, RGB);
+    strip.Show();
+  }
+}
+
+void colorWipe(uint8_t R, uint8_t G, uint8_t B) {
+  RgbColor RGB(R,G,B);
+  for(uint8_t i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
+    strip.SetPixelColor(i, RGB);
+    strip.Show();
+    delay(20);
   }
 }
 
 void saveCallback() {
-    //intensity = atoi(configManager.data.matrixIntensity);
     intensity = configManager.data.matrixIntensity;
-    pixels.updateLength (configManager.data.numofpixels);
-    pixels.setBrightness(intensity); 
+    strip.SetBrightness(intensity);
+    RgbColor colorGreen(configManager.data.colorGreen[0],configManager.data.colorGreen[1],configManager.data.colorGreen[2]);
+    RgbColor colorYellow(configManager.data.colorYellow[0],configManager.data.colorYellow[1],configManager.data.colorYellow[2]);
+    RgbColor colorOrange(configManager.data.colorOrange[0],configManager.data.colorOrange[1],configManager.data.colorOrange[2]);
+    RgbColor colorRed(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]);    
 }
 
 void MqttCallback(char* topic, byte* payload, unsigned int length) {
@@ -110,28 +222,7 @@ void MqttCallback(char* topic, byte* payload, unsigned int length) {
   
     Serial.print(F("Intensity: "));
     Serial.println(intensity);
-    pixels.setBrightness(intensity);
-
-}
-
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i < pixels.numPixels(); i++) {
-    pixels.setBrightness(intensity);
-    pixels.setPixelColor(i, c);
-    pixels.show();
-    delay(wait);
-  }
-}
-
-// Fill the dots one after the other with a color
-void colorWipeReverse(uint32_t c, uint8_t wait) {
-  for(uint16_t i=pixels.numPixels(); i > 0 ; i--) {
-    pixels.setBrightness(intensity);
-    pixels.setPixelColor(i, 0);
-    pixels.show();
-    delay(wait);
-  }
+    strip.SetBrightness(intensity);
 }
 
 // function to crate HTML Colour
@@ -151,8 +242,7 @@ void setLedColours(void) {
   char str[32] = "";
 
     if (dash.data.CO2 <= configManager.data.boarderGreen ) {                              // green
-    //setLED(0,255,0);
-    colorWipe(pixels.Color(configManager.data.colorGreen[0],configManager.data.colorGreen[1],configManager.data.colorGreen[2]), 50);
+    colorWipe(configManager.data.colorGreen[0],configManager.data.colorGreen[1],configManager.data.colorGreen[2]);
     blinking = false;
 
     // convert to HTML colour
@@ -163,8 +253,7 @@ void setLedColours(void) {
 
     } 
   else if (( dash.data.CO2 > configManager.data.boarderGreen ) && ( dash.data.CO2 < configManager.data.boarderYellow)) {       // yellow
-    //setLED(255,255,0);
-    colorWipe(pixels.Color(configManager.data.colorYellow[0],configManager.data.colorYellow[1],configManager.data.colorYellow[2]), 50);
+    colorWipe(configManager.data.colorYellow[0],configManager.data.colorYellow[1],configManager.data.colorYellow[2]);
     blinking = false;
 
     // convert to HTML colour
@@ -175,8 +264,7 @@ void setLedColours(void) {
 
   }
   else if (( dash.data.CO2 >= configManager.data.boarderYellow) && ( dash.data.CO2 < configManager.data.boarderOrange)) {      // orange
-    //setLED(255,128,0);
-    colorWipe(pixels.Color(configManager.data.colorOrange[0],configManager.data.colorOrange[1],configManager.data.colorOrange[2]), 50);
+    colorWipe(configManager.data.colorOrange[0],configManager.data.colorOrange[1],configManager.data.colorOrange[2]);
     blinking = false;
   
     // convert to HTML colour
@@ -187,8 +275,7 @@ void setLedColours(void) {
 
   }
   else if (( dash.data.CO2 >= configManager.data.boarderOrange) && ( dash.data.CO2 < configManager.data.boarderRed)) {      // orange
-    //setLED(255,0,0);
-    colorWipe(pixels.Color(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]), 50);
+    colorWipe(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]);
     blinking = false;
 
     // convert to HTML colour
@@ -320,9 +407,6 @@ void calibrationActive() {      // Calibration in progress
     if (seconds < 1200) {       // 20 minutes = 1200 seconds
       if (seconds > prevseconds) {
         prevseconds = seconds;
-        pixels.clear(); // Set all pixel colors to 'off'
-        colorWipe(pixels.Color(0, 0, 255), 10); // Blue
-        colorWipeReverse(pixels.Color(0, 0, 255), 10); // Blue
         display.clearDisplay();
         display.setCursor(0,0);
         display.setTextSize(2);
@@ -344,12 +428,6 @@ void calibrationActive() {      // Calibration in progress
         myMHZ19.autoCalibration(true);     // make sure auto calibration is on
         calibrationStarted = false;
         seconds = 0;
-        colorWipe(pixels.Color(0, 255, 0), 50); // Blue
-        colorWipeReverse(pixels.Color(0, 255, 0), 50); // Blue
-        colorWipe(pixels.Color(0, 255, 0), 50); // Blue
-        colorWipeReverse(pixels.Color(0, 255, 0), 50); // Blue
-        colorWipe(pixels.Color(0, 255, 0), 50); // Blue
-        colorWipeReverse(pixels.Color(0, 255, 0), 50); // Blue
     }
 }
  
@@ -395,15 +473,15 @@ void setup() {
   display.print("Please wait!");
   display.display(); 
 
-  // Neopixel SETUP
-  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  pixels.updateLength (configManager.data.numofpixels);  // Set pixel length
-  pixels.setBrightness(intensity);
-  colorWipe(pixels.Color(0, 0, 255), 50); // Blue
+  // NeoPixelBus SETUP
+  // this resets all the neopixels to an off state
+    strip.Begin();
+    intensity = configManager.data.matrixIntensity;
+    strip.SetBrightness(intensity);
+    SetupAnimations();
+    colorWipe(0,0,255);
+    strip.Show();
 
-  String VERSION = F("v.2.1");
-    int str_len = VERSION.length() + 1;
-    VERSION.toCharArray(dash.data.Version,str_len);
 
   // MQTT
   MQTTclient.setServer(configManager.data.mqtt_server, configManager.data.mqtt_port);
@@ -416,8 +494,6 @@ void setup() {
 
 }
 
-int startnum = 1;
-
 void loop() {
 
  // framework things
@@ -429,6 +505,15 @@ void loop() {
   if (configManager.data.mqttEnable) {              
         MQTTclient.loop();
       }
+
+  // NeoPixelBus TEST
+  //animations.UpdateAnimations();
+  if (calibrationStarted == true) {
+    animations.UpdateAnimations();
+    strip.Show();
+  }
+  
+  
 
 //tasks
     if (taskA.previous == 0 || (millis() - taskA.previous > taskA.rate)) {
@@ -449,28 +534,26 @@ void loop() {
         sprintf(dash.data.Wifi_RSSI, "%ld", rssi) ;
         dash.data.WLAN_RSSI = WiFi.RSSI();
       
-      // set colors of LED
+      if (calibrationStarted == false) {
+
+        // set colors of LED
       if((myMHZ19.errorCode == RESULT_OK) && (dash.data.CO2 != 0)) {
             // Change the colours regarding the CO2 value
             setLedColours();
           } 
       
-      if (calibrationStarted == false) {
-      
         // red blinking
       if (blinking) {
         if (intensity > 0) {
           intensity = 0;
-          pixels.setBrightness(intensity);
+          strip.SetBrightness(intensity);
         } else {
-          //intensity = atoi(configManager.data.matrixIntensity);
           intensity = configManager.data.matrixIntensity;
-          pixels.setBrightness(intensity);
+          strip.SetBrightness(intensity);
         }
       } else {
-          //intensity = atoi(configManager.data.matrixIntensity);
           intensity = configManager.data.matrixIntensity;
-          pixels.setBrightness(intensity);
+          strip.SetBrightness(intensity);
         }
       
         if (mqttPublishTime <= configManager.data.mqtt_interval) {
