@@ -1,4 +1,4 @@
-![Logo](pics/logo.jpg)
+![Logo](pics/Würfel.jpg)
 # CO2light by Kidbuild
 
 ## Description
@@ -36,7 +36,7 @@ will give you more informations about the web page and the messured values. You 
 | GND                 | Pin3 GND (sw)      | MH-Z19 CO2   |
 | Vin or 5V           | Pin4 +5V (rt)      | MH-Z19 CO2   |
 
-
+![Logo](pics/logo.jpg)
 ![Logo](pics/red.jpg)
 ![Logo](pics/sensor.jpg)
 ![Logo](pics/Config.jpg)
