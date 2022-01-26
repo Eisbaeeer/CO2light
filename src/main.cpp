@@ -356,7 +356,9 @@ void reconnect(void) {
     Serial.println("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "CO2Light-";
-    clientId += String(random(0xffff), HEX);
+    clientId += String(WiFi.macAddress());
+    //clientId += String(random(0xffff), HEX);
+    
     // Attempt to connect
     if (MQTTclient.connect(clientId.c_str(),configManager.data.mqtt_user,configManager.data.mqtt_password)) {
       Serial.println("connected");

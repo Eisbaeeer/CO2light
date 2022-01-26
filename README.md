@@ -22,19 +22,19 @@ will give you more informations about the web page and the messured values. You 
 
 ## Schematic
 
-| NodeMCU Board Pins  | Device Pin         | Device Name  |   
-|---------------------|--------------------|--------------|   
-| GND                 | GND                | SSD1309 OLED |   
-| 3.3V                | Vin                | SSD1309 OLED |   
-| GPIO5               | SCL                | SSD1309 OLED |   
-| GPIO4               | SDA                | SSD1309 OLED |   
-| GPIO3               | Data in            | WS2812B LED  |   
-| Vin or 5V           | +5V                | WS2812B LED  |
-| GND                 | GND                | WS2812B LED  |
-| GPIO13              | Pin6 UART TXT (gn) | MH-Z19 CO2   |
-| GPIO15              | Pin5 UART RXT (bl) | MH-Z19 CO2   |
-| GND                 | Pin3 GND (sw)      | MH-Z19 CO2   |
-| Vin or 5V           | Pin4 +5V (rt)      | MH-Z19 CO2   |
+| NodeMCU Board Pins |     | Device Pin         | Device Name  |   
+|--------------------|-----|--------------------|--------------|   
+| GND                | GND | GND                | SSD1309 OLED |   
+| 3.3V               | 3V3 | Vin                | SSD1309 OLED |   
+| GPIO5              | D1  | SCL                | SSD1309 OLED |   
+| GPIO4              | D2  | SDA                | SSD1309 OLED |   
+| GPIO3              | RX  | Data in            | WS2812B LED  |   
+| Vin or 5V          | Vin | +5V                | WS2812B LED  |
+| GND                | GND | GND                | WS2812B LED  |
+| GPIO13             | D7  | UART TXT (gn)      | MH-Z19 CO2   |
+| GPIO15             | D8  | UART RXT (bl)      | MH-Z19 CO2   |
+| GND                | GND | GND (sw)           | MH-Z19 CO2   |
+| Vin or 5V          | Vin | +5V (rt)           | MH-Z19 CO2   |
 
 ![Logo](pics/logo.jpg)
 ![Logo](pics/red.jpg)
@@ -59,9 +59,13 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 2.3
+- Changed MQTT client-id from random to MAC-Address. Issue #1
+- Password hidden now. Issue #3
+
 ### Version 2.2
 - Bugfixes
-- Changed Adafruit Neopixel lib to NeoPixelBus regarding disabled interrupts. This will break Wifi (You have to change the Din Pin to GPIO3)
+- Changed Adafruit Neopixel lib to NeoPixelBus regarding disabled interrupts. This will break Wifi (You have to change the Din Pin to GPIO3 for dma)
 
 ### Version 2.1
 - Bugfix MQTT client.loop

@@ -15,7 +15,7 @@
         "disabled": true,
         "hidden": true,
         "length": 8,
-        "value": "2.2"
+        "value": "2.3"
     },
     {
         "name": "language",        
@@ -159,6 +159,7 @@
         "label": "MQTT Password",
         "type": "char",
         "length": 20,
-        "value": "password"
+        "value": "password",
+        "control": "password"
     }
 ]
