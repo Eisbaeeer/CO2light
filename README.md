@@ -59,6 +59,15 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 2.4
+- Changed display to rolling display mode
+- Added online update via internet connection
+- Added I2C scanner for address of devices
+- Added support for I2C sensor BMP280
+- Added pressure + temperature to MQTT publish
+- Added MQ-Sensor´s analog value to MQTT publish
+- Added Piezo (one time one second sound at last boarder. Connected on pin D3 (GPIO0) )
+
 ### Version 2.3
 - Changed MQTT client-id from random to MAC-Address. Issue #1
 - Password hidden now. Issue #3

@@ -15,7 +15,7 @@
         "disabled": true,
         "hidden": true,
         "length": 8,
-        "value": "2.3"
+        "value": "2.4"
     },
     {
         "name": "language",        
@@ -50,6 +50,42 @@
         "type": "char",
         "length": 20,
         "value": "CO2Light"
+    },
+    {
+        "name": "sensorType",
+        "label": "Sensor Type",
+        "type": "uint8_t",
+        "value": 0,
+        "control": "select",
+        "options": [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        "optionLabels": [
+            "0  - Kein Sensor",
+            "1  - BMP280 - Temperature, Pressure",
+            "2  - BME280 - Temperature, Humidity, Pressure",
+            "3  - SHT30 - Temperature, Humidity",
+            "4  - SHT31 - Temperature, Humidity"
+        ]
+    },
+    {
+        "name": "sensorAddress",
+        "label": "Sensor Adresse",
+        "type": "uint8_t",
+        "value": 119,
+        "control": "select",
+        "options": [
+            118,
+            119
+        ],
+        "optionLabels": [
+            "0x76",
+            "0x77"
+        ]
     },
     {
         "name": "numofpixels",

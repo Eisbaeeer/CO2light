@@ -11,17 +11,37 @@
         "length": 8,
         "direction": "display",
         "display": "graph",
-        "xaxis": 50
+        "xaxis": 60
+    },
+    {
+        "name": "MQ_Graph",
+        "type": "uint16_t",
+        "length": 8,
+        "direction": "display",
+        "display": "graph",
+        "xaxis": 300
     },
     {
         "name": "CO2",
-        "type": "int16_t",
+        "type": "uint16_t",
         "length": 6,
         "direction": "display"
     },
     {
         "name": "Temperature",
-        "type": "int8_t",
+        "type": "char",
+        "length": 6,
+        "direction": "display"
+    },
+    {
+        "name": "Pressure",
+        "type": "char",
+        "length": 6,
+        "direction": "display"
+    },
+    {
+        "name": "MQ_Sensor",
+        "type": "uint16_t",
         "length": 6,
         "direction": "display"
     },
@@ -37,10 +57,16 @@
         "hidden": false
     },
     {
-        "name": "Calibration",
+        "name": "CO2_Calibration",
         "type": "bool",
         "direction": "control",
         "hidden": false,
         "value": false
+    },
+    {                                 
+        "name": "Online_update",
+        "type": "bool",
+        "direction": "control",
+        "hidden": false
     }
 ]
