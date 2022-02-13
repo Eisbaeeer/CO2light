@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "LittleFS.h"
 #include "WiFiManager.h"
 #include "webServer.h"
@@ -17,6 +18,7 @@
 #include <NeoPixelBrightnessBus.h> // instead of NeoPixelBus.h
 #include <NeoPixelAnimator.h>
 #include <Adafruit_BMP280.h>        // BMP280 lib
+#include "Adafruit_SHT31.h"         // SHT3x lib
 #include <ESP8266httpUpdate.h>     // Web Updater online
 
 
@@ -32,6 +34,9 @@ Adafruit_BMP280 bmp; // use I2C interface
 Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
 Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
 
+// SHT3x definitions
+//Adafruit_SHT31 SHTSensor = Adafruit_SHT31();
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 // WS2812 definitions
   const uint16_t PixelCount = 40; // this example assumes 4 pixels, making it smaller will cause a failure
@@ -111,6 +116,7 @@ task taskB = { .rate = 60000, .previous = 0 };    // 1 minute
 #define BUILTIN_LED 2             // On board LED
 const int buzzer = D3;            // Buzzer
 bool piep = false;                // helper Buzzer
+bool alarm = false;               // helper Buzzer
 bool reboot = false;              // Flag to reboot device
 int seconds = 0; 
 bool isCaptive = false; 	        // Captive portal active
@@ -126,6 +132,7 @@ int CursorY;                      // Cursor of display
 boolean blinking = false;         // helper for blinking
 int intensity = 30;               // LED intensity
 String co2Colour;                 // LED colour
+int temper = 0;                   // Temperatur integer
 
 // SUBROUTINES
 //*************************************************************************************
@@ -260,28 +267,57 @@ void SetupAnimations()
 
 void setLED(uint8_t R, uint8_t G, uint8_t B) {
   RgbColor RGB(R,G,B);
-  for(uint8_t i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
-    strip.SetPixelColor(i, RGB);
-    strip.Show();
+  if (!configManager.data.ledSegments) {
+    for(uint8_t i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
+      strip.SetPixelColor(i, RGB);
+      strip.Show();
+    }
+  } else {
+    for(uint8_t i=0; i<configManager.data.firstSegment; i++) {
+      strip.SetPixelColor(i, RGB);
+      strip.Show();
+    }
   }
 }
 
 void colorWipe(uint8_t R, uint8_t G, uint8_t B) {
   RgbColor RGB(R,G,B);
-  for(uint8_t i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
-    strip.SetPixelColor(i, RGB);
-    strip.Show();
-    delay(20);
+  if (!configManager.data.ledSegments) {
+    for(uint8_t i=0; i<configManager.data.numofpixels; i++) { // For each pixel...
+      strip.SetPixelColor(i, RGB);
+      strip.Show();
+      delay(20);
+    }
+  } else {
+    for(uint8_t i=0; i<configManager.data.firstSegment; i++) {
+      strip.SetPixelColor(i, RGB);
+      strip.Show();
+      delay(20);
+    }
   }
+}
+
+void colorTemp(uint8_t R, uint8_t G, uint8_t B) {
+  RgbColor RGB(R,G,B);
+  for(uint8_t i=configManager.data.firstSegment; i < (configManager.data.firstSegment+configManager.data.secondSegment); i++) { // For each pixel...
+      strip.SetPixelColor(i, RGB);
+      strip.Show();
+      delay(20);
+    }
+}
+
+void colorMQ(uint8_t R, uint8_t G, uint8_t B) {
+  RgbColor RGB(R,G,B);
+  for(uint8_t i=(configManager.data.firstSegment + configManager.data.secondSegment); i < (configManager.data.firstSegment+configManager.data.secondSegment+configManager.data.thirdSegment); i++) { // For each pixel...
+      strip.SetPixelColor(i, RGB);
+      strip.Show();
+      delay(20);
+    }
 }
 
 void saveCallback() {
     intensity = configManager.data.matrixIntensity;
     strip.SetBrightness(intensity);
-    RgbColor colorGreen(configManager.data.colorGreen[0],configManager.data.colorGreen[1],configManager.data.colorGreen[2]);
-    RgbColor colorYellow(configManager.data.colorYellow[0],configManager.data.colorYellow[1],configManager.data.colorYellow[2]);
-    RgbColor colorOrange(configManager.data.colorOrange[0],configManager.data.colorOrange[1],configManager.data.colorOrange[2]);
-    RgbColor colorRed(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]);    
 }
 
 void MqttCallback(char* topic, byte* payload, unsigned int length) {
@@ -317,7 +353,7 @@ void array_to_string(byte array[], unsigned int len, char buffer[])
     buffer[len*2] = '\0';
 }
 
-void setLedColours(void) {
+void setLedCO2Colors(void) {
   char str[32] = "";
 
     if (dash.data.CO2 <= configManager.data.boarderGreen ) {                              // green
@@ -367,16 +403,43 @@ void setLedColours(void) {
   else {
     setLED(configManager.data.colorRed[0],configManager.data.colorRed[1],configManager.data.colorRed[2]);                              // red
     blinking = true;
-
-    // convert to HTML colour
-    array_to_string(configManager.data.colorRed, 3, str);
-    co2Colour = "#";
-    co2Colour += String(str);
-    //Serial.println(co2Colour);
   }
 
 }
 
+void setLedTempColors(void) {
+  char str[32] = "";
+
+    if (temper <= configManager.data.tempBoarderKalt ) { 
+    colorTemp(configManager.data.TempColorKalt[0],configManager.data.TempColorKalt[1],configManager.data.TempColorKalt[2]);
+    } 
+    else if (( temper > configManager.data.tempBoarderKalt ) && ( temper < configManager.data.tempBoarderNormal)) {  
+    colorTemp(configManager.data.TempColorNormal[0],configManager.data.TempColorNormal[1],configManager.data.TempColorNormal[2]);
+    } 
+    else if (( temper >= configManager.data.tempBoarderNormal) && ( temper < configManager.data.tempBoarderComfort)) {    
+    colorTemp(configManager.data.TempColorNormal[0],configManager.data.TempColorNormal[1],configManager.data.TempColorNormal[2]);
+    }
+    else if (( temper >= configManager.data.tempBoarderComfort) && ( temper < configManager.data.tempBoarderWarm)) {      
+    colorTemp(configManager.data.TempColorComfort[0],configManager.data.TempColorComfort[1],configManager.data.TempColorComfort[2]);
+    }
+    else if (temper >= configManager.data.tempBoarderWarm) {
+    colorTemp(configManager.data.TempColorHot[0],configManager.data.TempColorHot[1],configManager.data.TempColorHot[2]);
+    } 
+}
+
+void setLedMQColors(void) {
+  char str[32] = "";
+
+    if (smoothAnalog <= configManager.data.MqBoarderNormal ) { 
+    colorMQ(configManager.data.MqColorNormal[0],configManager.data.MqColorNormal[1],configManager.data.MqColorNormal[2]);
+    } 
+    else if (( smoothAnalog > configManager.data.MqBoarderNormal ) && ( smoothAnalog < configManager.data.MqBoarderWarning)) {  
+    colorMQ(configManager.data.MqColorWarning[0],configManager.data.MqColorWarning[1],configManager.data.MqColorWarning[2]);
+    } 
+    else if (smoothAnalog >= configManager.data.MqBoarderWarning) {
+    colorMQ(configManager.data.MqColorCritical[0],configManager.data.MqColorCritical[1],configManager.data.MqColorCritical[2]);
+    } 
+}
 
 void PublishMQTT(void) {                     //MQTTclient.publish
   
@@ -404,7 +467,15 @@ void PublishMQTT(void) {                     //MQTTclient.publish
           topic = "CO2Light/";
           topic = topic + configManager.data.place;
           topic = topic +"/Temperature";
-          MQTTclient.publish(topic.c_str(), dash.data.Temperature); 
+          MQTTclient.publish(topic.c_str(), dash.data.Temperature);
+
+    // Publish Temperature
+    if (configManager.data.sensorType == 3) {
+          topic = "CO2Light/";
+          topic = topic + configManager.data.place;
+          topic = topic +"/Humidity";
+          MQTTclient.publish(topic.c_str(), dash.data.Humidity);
+    }
 
     // Publish Pressure
     if (configManager.data.sensorType == 1) {
@@ -638,7 +709,8 @@ void getCO2() {
   
         dash.data.CO2 = myMHZ19.getCO2();                             // Request CO2 (as ppm)
         if (configManager.data.sensorType == 0) {
-            dash.data.Temperature = myMHZ19.getTemperature();         // Request Temperature (as Celsius)
+            temper = myMHZ19.getTemperature();                            // Request Temperature
+            dtostrf(myMHZ19.getTemperature(), 2, 1, dash.data.Temperature);   // float to char
         }
         
                if(myMHZ19.errorCode == RESULT_OK)              // RESULT_OK is an alis for 1. Either can be used to confirm the response was OK.
@@ -673,9 +745,29 @@ void getSensor() {
         Serial.println(" hPa");
   
         dtostrf(temp_event.temperature, 2, 1, dash.data.Temperature);   // float to char
+        temper = temp_event.temperature;
         dtostrf(pressure_event.pressure, 5, 1, dash.data.Pressure);   // float to char
+      }
 
-      } 
+      if (configManager.data.sensorType == 3) {
+        // DHT3x Sensor
+        dtostrf(sht31.readTemperature(), 5, 1, dash.data.Temperature);  //float to char
+        temper = sht31.readTemperature();
+        dtostrf(sht31.readHumidity(), 5, 1, dash.data.Humidity);  //float to char
+
+        Serial.print(F("[INFO] Temperature = "));
+        Serial.print(dash.data.Temperature);
+        Serial.println(" *C");
+
+        Serial.print(F("[INFO] Humidity = "));
+        Serial.print(dash.data.Humidity);
+        Serial.println(" %");
+      }
+
+  if (configManager.data.ledSegments) {
+    setLedTempColors();
+  }
+
 }
 
 void update_started() {
@@ -779,7 +871,7 @@ void setup() {
   pinMode(BUILTIN_LED,OUTPUT);                 // LED
   pinMode( A0 , INPUT);                        // Analog A0
   pinMode(buzzer, OUTPUT);                     // Buzzer
-  digitalWrite(BUILTIN_LED,1);                 // LED off
+  //digitalWrite(BUILTIN_LED,1);                 // LED off
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("[DEBUG] SSD1306 allocation failed"));
@@ -849,6 +941,15 @@ void setup() {
     display.setCursor(0, CursorY);
     scanPorts();
    
+
+    // SHT3x SETUP
+    if (configManager.data.sensorType == 3) {
+      if (! sht31.begin(configManager.data.sensorAddress)) {
+        Serial.println("Couldn't find SHT31");
+      while (1) delay(1);
+      }
+    }
+        
     // BME280 SETUP
     
     // BMP280 SETUP
@@ -902,7 +1003,7 @@ void loop() {
         taskA.previous = millis();
 
       seconds++;
-
+     
       // Read Sensor Data
       smoothAnalog = analogRead(A0);
       dash.data.MQ_Graph = smoothAnalog;
@@ -921,9 +1022,25 @@ void loop() {
         // set colors of LED
       if((myMHZ19.errorCode == RESULT_OK) && (dash.data.CO2 != 0)) {
             // Change the colours regarding the CO2 value
-            setLedColours();
+            setLedCO2Colors();
           } 
       
+      // Piezo alarm if MQ-Sensor is critical
+      if (smoothAnalog > configManager.data.MqBoarderWarning) {
+        if (!alarm) {
+          alarm = true;
+          tone(buzzer, 1000);
+        } else { 
+          alarm = false;
+          noTone(buzzer);
+        }
+      } else {
+        if (alarm = true) {
+        alarm = false;
+        noTone(buzzer);
+        }
+      }
+
         // red blinking
       if (blinking) {
         if (intensity > 0) {
@@ -991,6 +1108,9 @@ void loop() {
 
         getSensor();
         getCO2();
+        if (configManager.data.ledSegments) {
+          setLedMQColors();
+        }
     }
 
     // Update from dashboard 

@@ -40,6 +40,12 @@
         "direction": "display"
     },
     {
+        "name": "Humidity",
+        "type": "char",
+        "length": 6,
+        "direction": "display"
+    },
+    {
         "name": "MQ_Sensor",
         "type": "uint16_t",
         "length": 6,

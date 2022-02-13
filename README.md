@@ -4,7 +4,7 @@
 ## Description
 This project shows you the air quality of your enviroment. I use MH-Z19B sensor to get the enviroment air quality.
 To get a quick view of the CO2 value, there is a WS2812B stripe who will show the quality in four steps. The SSD1306 display 
-will give you more informations about the web page and the messured values. You can change the ranges of colours against the CO2 value. 
+will give you more informations about the web page and the messured values. You can change the ranges of colors against the CO2 value. 
 
 ## Features
 - the code creates a filesystem on flash storage of the esp8266
@@ -12,12 +12,12 @@ will give you more informations about the web page and the messured values. You 
 - Wifi-Manager for easy connection to available AccessPoints
 - MQTT client to transmit the values to a central server like home-automation-systems
 - Brightness configurable via MQTT subscription (e.g. for automated day/night mode)
-- Publishing the colour of CO2 value via MQTT in HTML code (e.g. to display in homeautiomation)
+- Publishing the color of CO2 value via MQTT in HTML code (e.g. to display in homeautiomation)
 - Publishing the CO2 value via MQTT
 - Webpage to configure all settings or read the values
 - OTA Over-The-Air update of firmware
-- Colour picker for all colour states
-- Colour ranges configurable
+- Color picker for all color states
+- Color ranges configurable
 - Manual calibration of CO2 value possible via dashboard
 
 ## Schematic
@@ -27,7 +27,11 @@ will give you more informations about the web page and the messured values. You 
 | GND                | GND | GND                | SSD1309 OLED |   
 | 3.3V               | 3V3 | Vin                | SSD1309 OLED |   
 | GPIO5              | D1  | SCL                | SSD1309 OLED |   
-| GPIO4              | D2  | SDA                | SSD1309 OLED |   
+| GPIO4              | D2  | SDA                | SSD1309 OLED |
+| GND                | GND | GND                | I2C Sensor   |   
+| 3.3V               | 3V3 | Vin                | I2C Sensor   |   
+| GPIO5              | D1  | SCL                | I2C Sensor   |   
+| GPIO4              | D2  | SDA                | I2C Sensor   |   
 | GPIO3              | RX  | Data in            | WS2812B LED  |   
 | Vin or 5V          | Vin | +5V                | WS2812B LED  |
 | GND                | GND | GND                | WS2812B LED  |
@@ -35,6 +39,12 @@ will give you more informations about the web page and the messured values. You 
 | GPIO15             | D8  | UART RXT (bl)      | MH-Z19 CO2   |
 | GND                | GND | GND (sw)           | MH-Z19 CO2   |
 | Vin or 5V          | Vin | +5V (rt)           | MH-Z19 CO2   |
+| A0                 | A0  | A0                 | MQ-Sensor    |
+| Vin or 5V          | Vin | Vcc                | MQ-Sensor    |
+| GND                | GND | GND                | MQ-Sensor    |
+| GND                | GND | GND                | PIEZO        |
+| GPIO0              | D3  | +                  | PIEZO        |
+
 
 ![Logo](pics/logo.jpg)
 ![Logo](pics/red.jpg)
@@ -55,15 +65,23 @@ will give you more informations about the web page and the messured values. You 
 E-Mail info@kidbuild.de
 
 ## ToDo
-- Adding piezo for audio alarm
+- Support of I2C SHT30
+- Support of I2C BME280
 
 ## Changelog 
+
+### Version 2.5
+- Added function for 3 segmentation of LED stripe (CO2, Temperature, MQ-Sensor)
+- Added settings for temperature boarders & colors
+- Added settings for MQ sensor boarders & colors
+- Added support of I2C sensor SHT31-D
+- Added humidity to MQTT publish
 
 ### Version 2.4
 - Changed display to rolling display mode
 - Added online update via internet connection
-- Added I2C scanner for address of devices
-- Added support for I2C sensor BMP280
+- Added I2C scanner for address of I2C devices
+- Added support of I2C sensor BMP280
 - Added pressure + temperature to MQTT publish
 - Added MQ-Sensor´s analog value to MQTT publish
 - Added Piezo (one time one second sound at last boarder. Connected on pin D3 (GPIO0) )
@@ -89,7 +107,7 @@ E-Mail info@kidbuild.de
 
 ### Version 1.3   
 (Eisbaeeer 20211209)
-- Added colour picker for each colour
+- Added color picker for each color
 - Added MQTT enable / disable button
 - Brightness adjustable via MQTT subscription "Brightness"
 - Publishing LED colour as HTML 
@@ -99,7 +117,7 @@ E-Mail info@kidbuild.de
 (Eisbaeeer 20211126)
 - Migrated project to iot framework   
 - MQTT settings configurabel, now
-- Colour ranges configurable, now
+- Color ranges configurable, now
 - Wifi hostname configurable, now
 - Wifi RSSI visible on dashboard
 
