@@ -632,7 +632,24 @@ void printPressure() {
   display.print(" hPa"); 
   
   display.display();
+}
 
+void printHumidity() {
+  // clear display
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.setTextSize(2);
+  display.print("Feuchte");
+  display.setCursor(0, 36);
+  display.setTextSize(3);
+  if (dash.data.Humidity == 0 ) {
+    display.print("----");
+  } else {
+  display.print(dash.data.Humidity);
+  }
+  display.setTextSize(2);
+  display.print(" %"); 
+  display.display();
 }
 
 void printWifimode() {
@@ -682,7 +699,11 @@ void DisplayValues (void) {
           Serial.println(F("[DEBUG] show Pressure"));
            printPressure();
           played = true;
-        } else if (displayPtr == 4) {
+        } else if ((displayPtr == 4 ) && (configManager.data.sensorType > 1)) {
+          Serial.println(F("[DEBUG] show Humidity"));
+           printHumidity();
+          played = true;
+        } else if (displayPtr == 5) {
            Serial.println(F("[DEBUG] show Wifi Mode"));       
            printWifimode();
            played = true;
@@ -690,7 +711,7 @@ void DisplayValues (void) {
           displayPtr++;
         }             
         
-    if (displayPtr >=5) {
+    if (displayPtr >=6) {
       displayPtr = 1;
     }
 

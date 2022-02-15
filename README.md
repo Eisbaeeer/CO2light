@@ -70,6 +70,9 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 2.6
+- Add showing humidity on display
+
 ### Version 2.5
 - Added function for 3 segmentation of LED stripe (CO2, Temperature, MQ-Sensor)
 - Added settings for temperature boarders & colors
