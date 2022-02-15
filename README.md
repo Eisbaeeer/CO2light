@@ -142,3 +142,20 @@ E-Mail info@kidbuild.de
 ### Version 0.1 
 (Eisbaeeer 20201216)   
 - initial version
+
+
+Used Licenses in this project:
+
+| URL                                                   | License                                   |
+|-------------------------------------------------------|-------------------------------------------|
+| https://github.com/lorol/ESPAsyncWebServer            | unknown                                   |
+| https://github.com/WifWaf/MH-Z19                      | GNU Lesser General Public License v3.0    |
+| https://github.com/maakbaas/esp8266-iot-framework     | GNU General Public License v3.0           |
+| https://github.com/Makuna/NeoPixelBus                 | GNU Lesser General Public License v3.0    |
+| https://github.com/adafruit/Adafruit_SSD1306          | Software License Agreement (BSD License)  |
+| https://github.com/adafruit/Adafruit_BMP280_Library   | unknown                                   |
+| https://github.com/adafruit/Adafruit_BME280_Library   | All rights reserved by Adafruit.          |
+| https://github.com/adafruit/Adafruit_SHT31            | All rights reserved by Adafruit.          |
+| https://github.com/PaulStoffregen/Time                | unknown                                   |
+| https://github.com/adafruit/Adafruit_BusIO            | MIT License                               |
+| https://github.com/knolleary/pubsubclient/            | MIT License                               |
