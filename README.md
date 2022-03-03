@@ -14,11 +14,14 @@ will give you more informations about the web page and the messured values. You 
 - Brightness configurable via MQTT subscription (e.g. for automated day/night mode)
 - Publishing the color of CO2 value via MQTT in HTML code (e.g. to display in homeautiomation)
 - Publishing the CO2 value via MQTT
+- Publishing the temperature, pressure, humidity values via MQTT
 - Webpage to configure all settings or read the values
 - OTA Over-The-Air update of firmware
+- Online update via internet
 - Color picker for all color states
 - Color ranges configurable
 - Manual calibration of CO2 value possible via dashboard
+- Additional sensors like BMP280, BME280, SHT3x
 
 ## Schematic
 
@@ -45,6 +48,14 @@ will give you more informations about the web page and the messured values. You 
 | GND                | GND | GND                | PIEZO        |
 | GPIO0              | D3  | +                  | PIEZO        |
 
+## Supported Sensors
+
+| Sensor Type   | Functions                         |
+|---------------|-----------------------------------|
+| BMP280        | Temperature, Pressure             |
+| BME280        | Temperature, Pressure, Humidity   |
+| SHT3x         | Temperature, Humidity             |
+
 
 ![Logo](pics/logo.jpg)
 ![Logo](pics/red.jpg)
@@ -64,14 +75,15 @@ will give you more informations about the web page and the messured values. You 
 - http://www.kidbuild.de or https://shop.kidbuild.de
 E-Mail info@kidbuild.de
 
-## ToDo
-- Support of I2C SHT30
-- Support of I2C BME280
-
 ## Changelog 
 
+### Version 2.7
+- Added BME280 sensor support
+- Added piezo tone frequency configurable via slider
+- Removed while in setup routine (deadlock)
+
 ### Version 2.6
-- Add showing humidity on display
+- Added showing humidity on display
 
 ### Version 2.5
 - Added function for 3 segmentation of LED stripe (CO2, Temperature, MQ-Sensor)

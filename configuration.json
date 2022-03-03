@@ -15,7 +15,7 @@
         "disabled": true,
         "hidden": true,
         "length": 8,
-        "value": "2.6"
+        "value": "2.7"
     },
     {
         "name": "language",        
@@ -83,10 +83,10 @@
             69
         ],
         "optionLabels": [
-            "0x76 - BMP280",
-            "0x77 - BMP280",
-            "0x44 - SHT3x",
-            "0x45 - SHT3x"
+            "0x76 (BMP280/BME280)",
+            "0x77 (BMP280/BME280)",
+            "0x44 (SHT3x)",
+            "0x45 (SHT3x)"
         ]
     },
     {
@@ -104,6 +104,15 @@
         "control": "slider",
         "min": 0,
         "max": 255
+    },
+    {
+        "name": "buzzer",
+        "label": "Tonhöhe Buzzer KHz",
+        "type": "uint32_t",
+        "value": "4000",
+        "control": "slider",
+        "min": 100,
+        "max": 6000
     },
     {
         "name": "boarderGreen",

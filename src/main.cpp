@@ -18,6 +18,7 @@
 #include <NeoPixelBrightnessBus.h> // instead of NeoPixelBus.h
 #include <NeoPixelAnimator.h>
 #include <Adafruit_BMP280.h>        // BMP280 lib
+#include <Adafruit_BME280.h>        // BME280 lib
 #include "Adafruit_SHT31.h"         // SHT3x lib
 #include <ESP8266httpUpdate.h>     // Web Updater online
 
@@ -28,6 +29,10 @@ uint8_t portArray[] = {5, 4};
 String portMap[] = {"GPIO5", "GPIO4"};
 
 // BME280 definitions
+Adafruit_BME280 bme; // use I2C interface
+Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
+Adafruit_Sensor *bme_pressure = bme.getPressureSensor();
+Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 
 // BMP280 definitions
 Adafruit_BMP280 bmp; // use I2C interface
@@ -695,7 +700,7 @@ void DisplayValues (void) {
            Serial.println(F("[DEBUG] show Temperature"));
            printTemperature();
            played = true;
-        } else if ((displayPtr == 3 ) && (configManager.data.sensorType == 1)) {
+        } else if ((displayPtr == 3) && ((configManager.data.sensorType == 1) || (configManager.data.sensorType ==2))) {
           Serial.println(F("[DEBUG] show Pressure"));
            printPressure();
           played = true;
@@ -770,6 +775,30 @@ void getSensor() {
         dtostrf(pressure_event.pressure, 5, 1, dash.data.Pressure);   // float to char
       }
 
+      if (configManager.data.sensorType == 2) {
+        sensors_event_t temp_event, pressure_event, humidity_event;
+        bme_temp->getEvent(&temp_event);
+        bme_pressure->getEvent(&pressure_event);
+        bme_humidity->getEvent(&humidity_event);
+  
+        Serial.print(F("[INFO] Temperature = "));
+        Serial.print(temp_event.temperature);
+        Serial.println(" *C");
+
+        Serial.print(F("[INFO] Humidity = "));
+        Serial.print(humidity_event.relative_humidity);
+        Serial.println(" %");
+
+        Serial.print(F("[INFO] Pressure = "));
+        Serial.print(pressure_event.pressure);
+        Serial.println(" hPa");
+
+        dtostrf(temp_event.temperature, 2, 1, dash.data.Temperature);   // float to char
+        temper = temp_event.temperature;
+        dtostrf(pressure_event.pressure, 5, 1, dash.data.Pressure);   // float to char
+        dtostrf(humidity_event.relative_humidity, 5, 1, dash.data.Humidity);  //float to char
+      }
+      
       if (configManager.data.sensorType == 3) {
         // DHT3x Sensor
         dtostrf(sht31.readTemperature(), 5, 1, dash.data.Temperature);  //float to char
@@ -965,13 +994,21 @@ void setup() {
 
     // SHT3x SETUP
     if (configManager.data.sensorType == 3) {
-      if (! sht31.begin(configManager.data.sensorAddress)) {
+      if (!sht31.begin(configManager.data.sensorAddress)) {
         Serial.println("Couldn't find SHT31");
-      while (1) delay(1);
       }
     }
         
     // BME280 SETUP
+    if (configManager.data.sensorType == 2) {
+      if (!bme.begin(configManager.data.sensorAddress)) {
+        Serial.println(F("Could not find a valid BME280 sensor, check wiring!"));
+      } else {
+        bme_temp->printSensorDetails();
+        bme_pressure->printSensorDetails();
+        bme_humidity->printSensorDetails();
+      }
+    }
     
     // BMP280 SETUP
     if (configManager.data.sensorType == 1) {
@@ -1050,7 +1087,7 @@ void loop() {
       if (smoothAnalog > configManager.data.MqBoarderWarning) {
         if (!alarm) {
           alarm = true;
-          tone(buzzer, 1000);
+          tone(buzzer, configManager.data.buzzer);
         } else { 
           alarm = false;
           noTone(buzzer);
@@ -1074,7 +1111,7 @@ void loop() {
         // Buzzer
         if (!piep) {
           piep = true;
-          tone(buzzer, 1000); // play tone
+          tone(buzzer, configManager.data.buzzer); // play tone
         } else {
           noTone(buzzer);     // silent
         }
