@@ -474,8 +474,8 @@ void PublishMQTT(void) {                     //MQTTclient.publish
           topic = topic +"/Temperature";
           MQTTclient.publish(topic.c_str(), dash.data.Temperature);
 
-    // Publish Temperature
-    if (configManager.data.sensorType == 3) {
+    // Publish Humidity
+    if (configManager.data.sensorType > 1) {
           topic = "CO2Light/";
           topic = topic + configManager.data.place;
           topic = topic +"/Humidity";
@@ -483,7 +483,7 @@ void PublishMQTT(void) {                     //MQTTclient.publish
     }
 
     // Publish Pressure
-    if (configManager.data.sensorType == 1) {
+    if ((configManager.data.sensorType == 1) || (configManager.data.sensorType == 2)) {
           topic = "CO2Light/";
           topic = topic + configManager.data.place;
           topic = topic +"/Pressure";

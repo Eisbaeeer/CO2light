@@ -77,6 +77,9 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 2.71
+- Added BME280 sensor publishing values via MQTT
+
 ### Version 2.7
 - Added BME280 sensor support
 - Added piezo tone frequency configurable via slider
