@@ -77,6 +77,10 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 2.8
+- Added SHT3x sensor issue #4
+- Added separators in config and dashboard
+
 ### Version 2.71
 - Added BME280 sensor publishing values via MQTT
 

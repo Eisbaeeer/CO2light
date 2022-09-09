@@ -56,6 +56,13 @@
         "type": "bool",
         "direction": "display"
     },   
+    {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "Erweiterte Funktionen"
+    },
     {                                 
         "name": "Reboot",
         "type": "bool",

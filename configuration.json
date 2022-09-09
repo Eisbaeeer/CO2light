@@ -15,7 +15,7 @@
         "disabled": true,
         "hidden": true,
         "length": 8,
-        "value": "2.71"
+        "value": "2.8"
     },
     {
         "name": "language",        
@@ -45,11 +45,21 @@
         ]
     },
     {
+        "type": "separator"
+    },
+    {
         "name": "wifi_hostname",
         "label": "WiFi Hostname",
         "type": "char",
         "length": 20,
         "value": "CO2Light"
+    },
+    {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "Sensor Typ"
     },
     {
         "name": "sensorType",
@@ -90,6 +100,13 @@
         ]
     },
     {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "Farbeinstellung"
+    },
+    {
         "name": "numofpixels",
         "label": "Anzahl der RGB Dioden",
         "type": "int16_t",
@@ -113,6 +130,13 @@
         "control": "slider",
         "min": 100,
         "max": 6000
+    },
+    {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "CO2-Grenzwerte"
     },
     {
         "name": "boarderGreen",
@@ -161,6 +185,9 @@
         "label": "CO2 Farbton Rot",
         "type": "color",
         "value": [255,0,0]
+    },
+    {
+        "type": "separator"
     },
     {
         "name": "ledSegments",
@@ -244,6 +271,13 @@
         "value": [255,99,71]
     },
     {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "MQ-Sensor Einstellungen"
+    },
+    {
         "name": "MqBoarderNormal",
         "label": "Grenze MQ Sensor Normal",
         "type": "uint16_t",
@@ -272,6 +306,13 @@
         "label": "MQ Farbton Kritisch",
         "type": "color",
         "value": [255,0,0]
+    },
+    {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "MQTT Einstellungen"
     },
     {
         "name": "mqttEnable",
