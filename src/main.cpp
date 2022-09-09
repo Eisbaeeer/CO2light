@@ -919,6 +919,7 @@ void setup() {
 
   //Onboard LED & analog port, etc
   pinMode(BUILTIN_LED,OUTPUT);                 // LED
+  digitalWrite(BUILTIN_LED,HIGH);              // LED OFF
   pinMode( A0 , INPUT);                        // Analog A0
   pinMode(buzzer, OUTPUT);                     // Buzzer
   //digitalWrite(BUILTIN_LED,1);                 // LED off
