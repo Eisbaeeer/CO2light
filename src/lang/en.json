@@ -1,0 +1,14 @@
+{
+    "Dcalibrate": "Calibrate",
+    "Dstarted": "started",
+    "Dpwait": "please wait!",
+    "DsecondsRamaining": "seconds ramaining",
+    "DTemperature": "Temperature",
+    "DPressure": "Pressure",
+    "DHumidity": "Humidity",
+    "DCaptive": "Captive",
+    "DPortal": "Portal",
+    "DIPAddr": "IP address",
+    "DClient": "Client",
+    "DMode": "Mode"    
+}

@@ -15,7 +15,7 @@
         "disabled": true,
         "hidden": true,
         "length": 8,
-        "value": "2.8"
+        "value": "2.9"
     },
     {
         "name": "language",        
@@ -23,6 +23,22 @@
         "length": 3,
         "value": "en",
         "hidden": true
+    },
+    {
+        "name": "DLang",
+        "label": "Language",
+        "type": "char",
+        "length": 10,
+        "value": "/en.json",
+        "control": "select",
+        "options": [
+            "/en.json",
+            "/de.json"
+        ],
+        "optionLabels": [
+            "English",
+            "German"
+        ]
     },
     {
         "name": "Time_Zone",
@@ -62,8 +78,23 @@
         "text": "Sensor Typ"
     },
     {
+        "name": "displayType",
+        "label": "Display Type (reboot after change!)",
+        "type": "uint8_t",
+        "value": 0,
+        "control": "select",
+        "options": [
+            0,
+            1
+        ],
+        "optionLabels": [
+            "SSD1306",
+            "No display"
+        ]
+    },
+    {
         "name": "sensorType",
-        "label": "Sensor Typ (bei Änderung reboot nötig!)",
+        "label": "Sensor Type (reboot after change!)",
         "type": "uint8_t",
         "value": 0,
         "control": "select",
@@ -74,7 +105,7 @@
             3
         ],
         "optionLabels": [
-            "Kein Sensor",
+            "No sensor",
             "BMP280 - Temperatur, Luftdruck",
             "BME280 - Temperatur, Luftfeuchtigkeit, Luftdruck",
             "SHT3x - Temperatur, Luftfeuchtigkeit"
@@ -82,7 +113,7 @@
     },
     {
         "name": "sensorAddress",
-        "label": "Sensor Adresse",
+        "label": "Sensor Address",
         "type": "uint8_t",
         "value": 119,
         "control": "select",
@@ -111,7 +142,7 @@
         "label": "Anzahl der RGB Dioden",
         "type": "int16_t",
         "length": 5,
-        "value": "27"
+        "value": "36"
     },
     {
         "name": "matrixIntensity",

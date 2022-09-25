@@ -139,6 +139,10 @@ int intensity = 30;               // LED intensity
 String co2Colour;                 // LED colour
 int temper = 0;                   // Temperatur integer
 
+// JSON stuff
+StaticJsonDocument<512> doc;
+char language[512];
+
 // SUBROUTINES
 //*************************************************************************************
 
@@ -158,16 +162,19 @@ void check_if_exist_I2C() {
       Serial.print(F("[DEBUG] I2C device found at address 0x"));
       if (address < 16) {
         Serial.print(F("0"));
+        if (configManager.data.displayType == 0) {
         display.print("0");
+        }
         }
       Serial.print(address, HEX);
       Serial.println(F("  !"));
 
+      if (configManager.data.displayType == 0) {
       display.print("0x");
       display.print(address, HEX);
       CursorY += 24;
       display.setCursor(0, CursorY);
-
+      }
       nDevices++;
     } else if (error == 4) {
       Serial.print(F("[DEBUG] Unknow error at address 0x"));
@@ -176,7 +183,9 @@ void check_if_exist_I2C() {
       Serial.println(address, HEX);
     }
   } 
+    if (configManager.data.displayType == 0) {  
       display.display();
+    }
   
   if (nDevices == 0)
     Serial.println(F("[DEBUG] No I2C devices found"));
@@ -543,37 +552,47 @@ void calibrationActive() {      // Calibration in progress
       Serial.print("[DEBUG] ABC Status: "); myMHZ19.getABC() ? Serial.println("ON") :  Serial.println("OFF");  // now print it's status
       Serial.println("[INFO] Waiting 20 minutes to stabalise...");
       // Info on display
+      if (configManager.data.displayType == 0) {
       display.clearDisplay();
       display.setCursor(0,0);
       display.setTextSize(2);
-      display.print("Calibrate");
+      String Dcalibrate = doc["Dcalibrate"];
+      display.print(Dcalibrate);
       display.setCursor(0,24);
       display.setTextSize(2);
-      display.print("Started");
+      
+      String Dstarted = doc["Dstarted"];
+      display.print(Dstarted);
       display.setCursor(0,48);
       display.setTextSize(1);
-      display.print("Please wait!");
+      String Dpwait = doc["Dpwait"];
+      display.print(Dpwait);
       display.display();
+      }
       delay(4000);
     }
     if (seconds < 1200) {       // 20 minutes = 1200 seconds
       if (seconds > prevseconds) {
         prevseconds = seconds;
-        display.clearDisplay();
-        display.setCursor(0,0);
-        display.setTextSize(2);
-        display.print("Calibrate");
-        display.setCursor(0,30);
-        display.setTextSize(2);
         int remaining = 1200 - seconds;
-        display.print(remaining);
-        display.setCursor(0,48);
-        display.setTextSize(1);
-        display.print("seconds ramaining");
-        display.display();
-        Serial.print(F("[DEBUG] Calibration"));
-        Serial.print(remaining);
-        Serial.println(F(" seconds remaining"));
+        if (configManager.data.displayType == 0) {
+          display.clearDisplay();
+          display.setCursor(0,0);
+          display.setTextSize(2);
+          String Dcalibrate = doc["Dcalibrate"];
+          display.print(Dcalibrate);
+          display.setCursor(0,30);
+          display.setTextSize(2);
+          display.print(remaining);
+          display.setCursor(0,48);
+          display.setTextSize(1);
+          String DsecondsRamaining = doc["DsecondsRamaining"];
+          display.print(DsecondsRamaining);
+          display.display();
+        }
+          Serial.print(F("[DEBUG] Calibration"));
+          Serial.print(remaining);
+          Serial.println(F(" seconds remaining"));
     } 
   } else {
         myMHZ19.calibrate();    // Take a reading which be used as the zero point for 400 ppm
@@ -584,31 +603,38 @@ void calibrationActive() {      // Calibration in progress
 }
 
 void printCO2() {
+  if (configManager.data.displayType == 0) {
   // clear display
   display.clearDisplay();
   // display co2
-  display.setCursor(0,0);
-  display.setTextSize(2);
-  display.print("CO2");
-  display.setCursor(0, 36);
-  display.setTextSize(4);
-  if (dash.data.CO2 == 0 ) {
-    display.print("----");
-  } else {
-  display.print(dash.data.CO2);
-  }
-  display.setTextSize(1);
-  display.print(" ppm"); 
+    display.setCursor(0,0);
+    display.setTextSize(2);
+    display.print("CO2");
+    display.setCursor(0, 36);
+    display.setTextSize(4);
+    if (dash.data.CO2 == 0 ) {
+      display.print("----");
+    } else {
+      display.print(dash.data.CO2);
+    }
+    display.setTextSize(1);
+    display.print(" ppm"); 
   
-  display.display(); 
+    display.display(); 
+  }
+  Serial.print(F("[INFO] CO2 : "));
+  Serial.print(dash.data.CO2);
+  Serial.println(F(" ppm"));
 }
 
 void printTemperature() {
+  if (configManager.data.displayType == 0) {
     // clear display
   display.clearDisplay();
   display.setCursor(0,0);
   display.setTextSize(2);
-  display.print("Temperatur");
+  String DTemperature = doc["DTemperature"];
+  display.print(DTemperature);
   display.setCursor(0, 36);
   display.setTextSize(3);
   display.print(dash.data.Temperature);
@@ -618,14 +644,20 @@ void printTemperature() {
   display.setTextSize(2);
   display.print("C");
   display.display();
+  }
+  Serial.print(F("[INFO] Temperature : "));
+  Serial.print(dash.data.Temperature);
+  Serial.println(F(" °C"));
 }
 
 void printPressure() {
+  if (configManager.data.displayType == 0) {
   // clear display
   display.clearDisplay();
   display.setCursor(0,0);
   display.setTextSize(2);
-  display.print("Luftdruck");
+  String DPressure = doc["DPressure"];
+  display.print(DPressure);
   display.setCursor(0, 36);
   display.setTextSize(3);
   if (dash.data.Pressure == 0 ) {
@@ -637,14 +669,17 @@ void printPressure() {
   display.print(" hPa"); 
   
   display.display();
+  }
 }
 
 void printHumidity() {
+  if (configManager.data.displayType == 0) {
   // clear display
   display.clearDisplay();
   display.setCursor(0,0);
   display.setTextSize(2);
-  display.print("Feuchte");
+  String DHumidity = doc["DHumidity"];
+  display.print(DHumidity);
   display.setCursor(0, 36);
   display.setTextSize(3);
   if (dash.data.Humidity == 0 ) {
@@ -655,19 +690,24 @@ void printHumidity() {
   display.setTextSize(2);
   display.print(" %"); 
   display.display();
+  }
 }
 
 void printWifimode() {
+  if (configManager.data.displayType == 0) {
     display.clearDisplay();
       if (isCaptive) {
         display.setCursor(0,0);
         display.setTextSize(2);
-        display.print("Captive");
+        String DCaptive = doc["DCaptive"];
+        display.print(DCaptive);
         display.setCursor(0,16);
-        display.print("Portal");
+        String DPortal = doc["DPortal"];
+        display.print(DPortal);
         display.setCursor(0,40);
         display.setTextSize(1);
-        display.print("IP Adresse");
+        String DIPAddr = doc["DIPAddr"];
+        display.print(DIPAddr);
         display.setCursor(0,56);
         display.setTextSize(1);
         display.print("192.168.4.1");
@@ -675,17 +715,21 @@ void printWifimode() {
       } else {
         display.setCursor(0,0);
         display.setTextSize(2);
-        display.print("Client");
+        String DClient = doc["DClient"];
+        display.print(DClient);
         display.setCursor(0,16);
-        display.print("Mode");
+        String DMode = doc["DMode"];
+        display.print(DMode);
         display.setCursor(0,40);
         display.setTextSize(1);
-        display.print("IP Adresse");
+        String DIPAddr = doc["DIPAddr"];
+        display.print(DIPAddr);
         display.setCursor(0,56);
         display.setTextSize(1);
         display.print(WiFi.localIP());
         display.display();
       }
+  }
 }
 
 void DisplayValues (void) { 
@@ -821,26 +865,30 @@ void getSensor() {
 }
 
 void update_started() {
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.setTextSize(2);
-  display.print("Update");
-  display.setCursor(0, 36);
-  display.setTextSize(2);
-  display.print("started");
-  display.display();
+  if (configManager.data.displayType == 0) {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(2);
+    display.print("Update");
+    display.setCursor(0, 36);
+    display.setTextSize(2);
+    display.print("started");
+    display.display();
+  }
   Serial.println(F("[INFO] HTTP update process started"));
 }
 
 void update_finished() {
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.setTextSize(2);
-  display.print("Update");
-  display.setCursor(0, 36);
-  display.setTextSize(2);
-  display.print("done");
-  display.display();
+  if (configManager.data.displayType == 0) {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(2);
+    display.print("Update");
+    display.setCursor(0, 36);
+    display.setTextSize(2);
+    display.print("done");
+    display.display();
+  }
   Serial.println(F("[INFO] HTTP update process finished"));
 }
 
@@ -849,29 +897,33 @@ void update_progress(int cur, int total) {
   float percent = ((float)cur   / (float)total )  * 100;
   //sprintf(progressString, " %s",  String(percent).c_str()  );
   sprintf(progressString, " %s",  String(percent,0).c_str()  );
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.setTextSize(2);
-  display.print("Update");
-  display.setCursor(0, 36);
-  display.setTextSize(3);
-  display.print(progressString);
-  display.print(" %");
-  display.display();  
+  if (configManager.data.displayType == 0) {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(2);
+    display.print("Update");
+    display.setCursor(0, 36);
+    display.setTextSize(3);
+    display.print(progressString);
+    display.print(" %");
+    display.display();  
+  }
   Serial.printf("[INFO] HTTP update process at %d of %d bytes...\n", cur, total);
 }
 
 void update_error(int err) {
   char errorString[8];
   sprintf(errorString, "Err %d", err);
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.setTextSize(2);
-  display.print("Update");
-  display.setCursor(0, 36);
-  display.setTextSize(2);
-  display.print(errorString);
-  display.display();  
+  if (configManager.data.displayType == 0) {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(2);
+    display.print("Update");
+    display.setCursor(0, 36);
+    display.setTextSize(2);
+    display.print(errorString);
+    display.display();  
+  }
   Serial.printf("[INFO] HTTP update fatal error code %d\n", err);
 }
 
@@ -910,6 +962,55 @@ void setup() {
   configManager.setConfigSaveCallback(saveCallback);
   dash.begin(500);
 
+  // Language
+  File langFile = LittleFS.open(configManager.data.DLang, "r");
+
+  if (!langFile) {
+    Serial.println(F("[INFO] No language file found!"));
+  } else {
+    int x = 0;
+    Serial.println(F("[INFO] Reading language file"));
+    Serial.print(F("File name: "));
+    Serial.println(langFile);
+    //Data from file
+    for (int i=0; i<langFile.size(); i++) {
+      language[x] = langFile.read();    // read byte
+      x++;                            // inc x
+      language[x] = '\0';              // Null termination
+    }
+    langFile.close();
+
+      deserializeJson(doc, language);
+
+      String Dcalibrate = doc["Dcalibrate"];
+      String Dstarted = doc["Dstarted"];
+      String Dpwait = doc["Dpwait"];
+      String DsecondsRamaining = doc["DsecondsRamaining"];
+      String DTemperature = doc["DTemperature"];
+      String DPressure = doc["DPressure"];
+      String DHumidity = doc["DHumidity"];
+      String DCaptive = doc["DCaptive"];
+      String DPortal = doc["DPortal"];
+      String DIPAddr = doc["DIPAddr"];
+      String DClient = doc["DClient"];
+      String DMode = doc["DMode"];
+
+      Serial.println(Dcalibrate);
+      Serial.println(Dstarted);
+      Serial.println(Dpwait);
+      Serial.println(DsecondsRamaining);
+      Serial.println(DTemperature);
+      Serial.println(DPressure);
+      Serial.println(DHumidity);
+      Serial.println(DCaptive);
+      Serial.println(DPortal);
+      Serial.println(DIPAddr);
+      Serial.println(DClient);
+      Serial.println(DMode);
+
+  }
+
+
   // WiFi
   WiFi.hostname(configManager.data.wifi_hostname);
   WiFi.begin();
@@ -919,31 +1020,35 @@ void setup() {
 
   //Onboard LED & analog port, etc
   pinMode(BUILTIN_LED,OUTPUT);                 // LED
-  digitalWrite(BUILTIN_LED,HIGH);              // LED OFF
   pinMode( A0 , INPUT);                        // Analog A0
   pinMode(buzzer, OUTPUT);                     // Buzzer
-  //digitalWrite(BUILTIN_LED,1);                 // LED off
+  digitalWrite(BUILTIN_LED,1);                 // LED off
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("[DEBUG] SSD1306 allocation failed"));
-    for(;;);
-  }
-  delay(2000);
-  display.clearDisplay();
-  display.setTextColor(WHITE);
+  
+  // Display
+  //if (configManager.data.displayType == 0) {
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+      Serial.println(F("[DEBUG] SSD1306 allocation failed"));
+      //for(;;);
+    } else {
+    delay(2000);
+    display.clearDisplay();
+    display.setTextColor(WHITE);
 
-  // Say hello to the world
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.setTextSize(3);
-  display.print("booting");
-  display.setCursor(0,30);
-  display.setTextSize(1);
-  display.print("Wifi Manager");
-  display.setCursor(0,40);
-  display.setTextSize(1);
-  display.print("Please wait!");
-  display.display(); 
+    // Say hello to the world
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(3);
+    display.print("booting");
+    display.setCursor(0,30);
+    display.setTextSize(1);
+    display.print("Wifi Manager");
+    display.setCursor(0,40);
+    display.setTextSize(1);
+    display.print("Please wait!");
+    display.display();
+    } 
+  //}
 
   // NeoPixelBus SETUP
   // this resets all the neopixels to an off state
@@ -983,6 +1088,7 @@ void setup() {
 
    // I2C Portscanner
    Serial.println("[DEBUG] I2C Scanner to scan for devices on each port pair D1 to D2");
+    if (configManager.data.displayType == 0) {
     display.clearDisplay();
     CursorY = 0;
     display.setCursor(0,CursorY);
@@ -990,6 +1096,7 @@ void setup() {
     display.print("I2C Addr.");
     CursorY += 24;
     display.setCursor(0, CursorY);
+    }
     scanPorts();
    
 

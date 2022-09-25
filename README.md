@@ -22,6 +22,7 @@ will give you more informations about the web page and the messured values. You 
 - Color ranges configurable
 - Manual calibration of CO2 value possible via dashboard
 - Additional sensors like BMP280, BME280, SHT3x
+- Multi language support (define the language file in main.cpp and upload the xx.json file of depending language in "File Manager")
 
 ## Schematic
 
@@ -69,6 +70,9 @@ will give you more informations about the web page and the messured values. You 
 2. https://github.com/maakbaas/esp8266-iot-framework/blob/master/docs/getting-started.md
 3. Install required libraries: PubSubClient, Adafruit_GFX, Adafruit_SSD1306; Adafruit_NeoPixel; MHZ19 ... 
 4. Compile
+If you get errors you can try:
+5. npm ci fix: npm ci --legacy-peer-deps
+
 
 
 ## Weblinks to get running
@@ -76,6 +80,10 @@ will give you more informations about the web page and the messured values. You 
 E-Mail info@kidbuild.de
 
 ## Changelog 
+
+### Version 2.9
+- Added language support for display
+- Added selection of displays in config menu
 
 ### Version 2.8
 - Added SHT3x sensor issue #4
