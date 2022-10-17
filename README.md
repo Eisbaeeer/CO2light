@@ -1,3 +1,5 @@
+![build](https://github.com/Eisbaeeer/CO2light/actions/workflows/build.yml/badge.svg)
+
 ![Logo](pics/Würfel.jpg)
 # CO2light by Kidbuild
 
