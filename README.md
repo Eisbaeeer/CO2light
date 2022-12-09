@@ -75,7 +75,11 @@ will give you more informations about the web page and the messured values. You 
 If you get errors you can try:
 5. npm ci fix: npm ci --legacy-peer-deps
 
+## Language support
+Don´t forget to upload the language files to the CO2light!
+Please support your language with a pull request. You can use the en.json to translate to your language. You will find the language file in /src/lang/ folder.
 
+![Logo](pics/language.png)
 
 ## Weblinks to get running
 - http://www.kidbuild.de or https://shop.kidbuild.de
@@ -84,7 +88,7 @@ E-Mail info@kidbuild.de
 ## Changelog 
 
 ### Version 2.9
-- Added language support for display
+- Added language support for display --> upload language files!
 - Added selection of displays in config menu
 
 ### Version 2.8
