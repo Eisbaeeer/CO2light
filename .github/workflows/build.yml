@@ -11,7 +11,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 14 # version 14 throw errors
+          node-version: 14.20.0 # version 14 throw errors
       - name: Build PlatformIO project
         run: pio run -d ./ -e nodemcuv2
       - name: Adjust firmware filename
@@ -33,7 +33,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 14 # npm dependency resolution for esp8266 iot framework breaks with 16
+          node-version: 14.20.0 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e d1
       - name: Adjust firmware filename
@@ -55,7 +55,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 14 # npm dependency resolution for esp8266 iot framework breaks with 16
+          node-version: 14.20.0 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e d1_mini
       - name: Adjust firmware filename
