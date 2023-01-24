@@ -11,7 +11,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 19 # version 14 throw errors
+          node-version: 18 # version 14 throw errors
       - name: Build PlatformIO project
         run: pio run -d ./ -e nodemcuv2
       - name: Adjust firmware filename
