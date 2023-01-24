@@ -777,19 +777,20 @@ void getCO2() {
         // usual documented command with getCO2(false) 
         Serial.println(F("[DEBUG] read CO2 value"));
   
-        dash.data.CO2 = myMHZ19.getCO2();                             // Request CO2 (as ppm)
+        uint16_t co2value = myMHZ19.getCO2(true);                             // Request CO2 (as ppm)
+  
         if (configManager.data.sensorType == 0) {
             temper = myMHZ19.getTemperature();                            // Request Temperature
             dtostrf(myMHZ19.getTemperature(), 2, 1, dash.data.Temperature);   // float to char
         }
-        
-               if(myMHZ19.errorCode == RESULT_OK)              // RESULT_OK is an alis for 1. Either can be used to confirm the response was OK.
+               
+        if(co2value !=0)              // Response from filter
         {
+            dash.data.CO2 = co2value;
             Serial.print(F("[DEBUG] co2 Value successfully Recieved: "));
             Serial.println(dash.data.CO2);
             Serial.print(F("[DEBUG] Response Code: "));
             Serial.println(myMHZ19.errorCode);          // Get the Error Code value
-
             
         } else {
             Serial.println(F("[DEBUG] Failed to recieve CO2 value - Error"));
@@ -1067,7 +1068,8 @@ void setup() {
   // MH-Z19B construct
   mySerial.begin(BAUDRATE);                               // (Uno example) device to MH-Z19 serial start   
   myMHZ19.begin(mySerial);                                // *Serial(Stream) refence must be passed to library begin(). 
-  myMHZ19.autoCalibration(true);                              // Turn auto calibration ON (OFF autoCalibration(false))
+  myMHZ19.autoCalibration(true);                          // Turn auto calibration ON (OFF autoCalibration(false))
+  myMHZ19.setFilter(true, true);                          // set filter to get valid values
 
   char myVersion[4];          
   myMHZ19.getVersion(myVersion);
