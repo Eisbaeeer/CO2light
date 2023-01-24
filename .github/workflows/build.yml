@@ -7,14 +7,14 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.8'
       - name: Setup PlatformIO
         uses: n-vr/setup-platformio-action@v1
         with:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 14.3.0 # version 14 throw errors
+          node-version: 14 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e nodemcuv2
       - name: Adjust firmware filename
