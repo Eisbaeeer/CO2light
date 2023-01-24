@@ -87,6 +87,9 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Veriosn 2.91
+- Added filter for CO2 value
+
 ### Version 2.9
 - Added language support for display --> upload language files!
 - Added selection of displays in config menu
