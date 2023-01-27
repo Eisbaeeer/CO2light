@@ -28,10 +28,6 @@ jobs:
   build-d1:
     name: Build binary for d1
     runs-on: ubuntu-22.04
-    
-    strategy:
-      matrix:
-      node-version: [8.13.2]
     steps:
       - uses: actions/checkout@v3
       - name: Setup PlatformIO
