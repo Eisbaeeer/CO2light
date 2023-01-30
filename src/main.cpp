@@ -1015,7 +1015,8 @@ void setup() {
   // WiFi
   WiFi.hostname(configManager.data.wifi_hostname);
   WiFi.begin();
-
+  WiFi.setAutoReconnect(true);
+  
   // Timesync
   timeSync.begin(configManager.data.Time_Zone);
 
