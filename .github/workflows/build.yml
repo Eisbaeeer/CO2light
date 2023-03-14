@@ -14,7 +14,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-         node-version: 19.7.0 # npm dependency resolution for esp8266 iot framework breaks with 16
+         node-version: 16.16.0 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e nodemcuv2
       - name: Adjust firmware filename
