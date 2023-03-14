@@ -596,7 +596,7 @@ void calibrationActive() {      // Calibration in progress
     } 
   } else {
         myMHZ19.calibrate();    // Take a reading which be used as the zero point for 400 ppm
-        myMHZ19.autoCalibration(true);     // make sure auto calibration is on
+        myMHZ19.autoCalibration(configManager.data.autoCalibration);     // make sure auto calibration is on
         calibrationStarted = false;
         seconds = 0;
     }
@@ -1067,10 +1067,10 @@ void setup() {
   MQTTclient.setCallback(MqttCallback);
 
   // MH-Z19B construct
-  mySerial.begin(BAUDRATE);                               // (Uno example) device to MH-Z19 serial start   
-  myMHZ19.begin(mySerial);                                // *Serial(Stream) refence must be passed to library begin(). 
-  myMHZ19.autoCalibration(true);                          // Turn auto calibration ON (OFF autoCalibration(false))
-  myMHZ19.setFilter(true, true);                          // set filter to get valid values
+  mySerial.begin(BAUDRATE);                                     // (Uno example) device to MH-Z19 serial start   
+  myMHZ19.begin(mySerial);                                      // *Serial(Stream) refence must be passed to library begin(). 
+  myMHZ19.autoCalibration(configManager.data.autoCalibration);  // Turn auto calibration ON (OFF autoCalibration(false))
+  myMHZ19.setFilter(true, true);                                // set filter to get valid values
 
   char myVersion[4];          
   myMHZ19.getVersion(myVersion);
