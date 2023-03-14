@@ -87,6 +87,9 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 3.0
+- Added configurable autoCalibration of MHZ19
+
 ### Veriosn 2.91
 - Added filter for CO2 value
 
