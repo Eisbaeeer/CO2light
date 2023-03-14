@@ -14,7 +14,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-         node-version: 16.16.0 # npm dependency resolution for esp8266 iot framework breaks with 16
+          node-version: 16.16.0 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e nodemcuv2
       - name: Adjust firmware filename
@@ -23,11 +23,12 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         if: startsWith(github.ref, 'refs/tags/')
         env:
+          NPM_CONFIG_LEGACY_PEER_DEPS: true
           GHR_PATH: firmware-nodemcuv2.bin
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-d1:
     name: Build binary for d1
-    runs-on:  ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Setup PlatformIO
@@ -36,7 +37,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.16.0 # npm dependency resolution for esp8266 iot framework breaks with 16
+          node-version: 14.3.0 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e d1
       - name: Adjust firmware filename
@@ -45,12 +46,11 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          NPM_CONFIG_LEGACY_PEER_DEPS: true
           GHR_PATH: firmware-d1.bin
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-d1_mini:
     name: Build binary for d1_mini
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Setup PlatformIO
@@ -59,7 +59,7 @@ jobs:
           platformio-version: "6.1.6"
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.16.0 # npm dependency resolution for esp8266 iot framework breaks with 16
+          node-version: 14.3.0 # npm dependency resolution for esp8266 iot framework breaks with 16
       - name: Build PlatformIO project
         run: pio run -d ./ -e d1_mini
       - name: Adjust firmware filename
