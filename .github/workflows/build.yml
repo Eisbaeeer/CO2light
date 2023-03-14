@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18.15.0 # npm dependency resolution for esp8266 iot framework breaks with 16
+        run: npm config set legacy-peer-deps true
       - name: Build PlatformIO project
         run: pio run -d ./ -e nodemcuv2
       - name: Adjust firmware filename
