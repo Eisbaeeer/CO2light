@@ -15,7 +15,7 @@
         "disabled": true,
         "hidden": true,
         "length": 8,
-        "value": "2.91"
+        "value": "3.0"
     },
     {
         "name": "language",        
@@ -129,6 +129,19 @@
             "0x44 (SHT3x)",
             "0x45 (SHT3x)"
         ]
+    },
+    {
+        "type": "separator"
+    },
+    {
+        "type": "header",
+        "text": "CO2-Sensor Einstellungen"
+    },
+    {
+        "name": "autoCalibration",
+        "label": "Auto Calibration",
+        "type": "bool",
+        "value": true
     },
     {
         "type": "separator"
