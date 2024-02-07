@@ -87,6 +87,9 @@ E-Mail info@kidbuild.de
 
 ## Changelog 
 
+### Version 3.1
+- Added configurable offset CO2 value
+
 ### Version 3.0
 - Added configurable autoCalibration of MHZ19
 

@@ -786,7 +786,7 @@ void getCO2() {
                
         if(co2value !=0)              // Response from filter
         {
-            dash.data.CO2 = co2value;
+            dash.data.CO2 = co2value + configManager.data.Co2Offset;
             Serial.print(F("[DEBUG] co2 Value successfully Recieved: "));
             Serial.println(dash.data.CO2);
             Serial.print(F("[DEBUG] Response Code: "));
